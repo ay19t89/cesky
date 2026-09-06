@@ -57,3 +57,7 @@ npm run build:pages
 - Noto Sans: `public/fonts/OFL.txt`.
 
 The website depends on the availability and HTML/API formats of the two upstream sources. Changes in the IJP layout may require a parser update.
+
+## Verification status
+
+Automated checks passed for all four genders against the live sources, accent correction, parser edge cases, rejected unauthenticated requests, CSV contents, XLSX round-trip, and PDF text extraction with Czech accents. Both Sites and static Pages builds pass. Authenticated save/reload and multi-account RLS still need verification after the administrator creates and approves accounts. Browser interaction tests and the optional WebMCP contract were not run; a supported WebMCP validation context was not available.
