@@ -1,73 +1,46 @@
-import { cases, genders, type Lookup } from './types';
+import { cases, genders, type Lookup, type Paradigm } from './types';
 
-export const headers = [
-  'Slovo',
-  'Zdroj',
-  'Heslo',
-  'Rod',
-  'Číslo',
-  'Pád',
-  'Tvary',
-  'Stav zdroje',
-  'Ověřeno',
-  'Odkaz',
-];
+export const headers = ['Rod', 'Slovo', 'Číslo', ...cases, 'Odkaz'];
+
+type ExportEntry = {
+  result: Lookup;
+  entry: Paradigm | null;
+};
+
+function entriesForExport(results: Lookup[]): ExportEntry[] {
+  return results.flatMap((result) => {
+    const entries = result.ijp.entries.length ? result.ijp.entries : [null];
+    return entries.map((entry) => ({ result, entry }));
+  });
+}
+
+function genderLabel(entry: Paradigm | null): string {
+  return entry?.gender ? genders[entry.gender] : 'Rod neurčen';
+}
 
 export function exportRows(results: Lookup[]): string[][] {
-  return results.flatMap((result) => {
-    const source = result.ijp;
-    const sourceName = 'Internetová jazyková příručka';
+  return entriesForExport(results).flatMap(({ result, entry }) => {
+    const word = entry?.lemma || result.word;
+    const link = result.ijp.url;
 
-    if (!source.entries.length) {
-      return [
-        [
-          result.word,
-          sourceName,
-          '',
-          '',
-          '',
-          '',
-          '',
-          source.message || source.status,
-          result.checkedAt,
-          source.url,
-        ],
-      ];
-    }
-
-    return source.entries.flatMap((entry) =>
-      (['singular', 'plural'] as const).flatMap((number) =>
-        entry[number].map((forms, index) => [
-          result.word,
-          sourceName,
-          entry.lemma,
-          entry.gender ? genders[entry.gender] : 'Neurčeno',
-          number === 'singular' ? 'Jednotné' : 'Množné',
-          cases[index],
-          forms.join(', '),
-          source.status,
-          result.checkedAt,
-          source.url,
-        ]),
-      ),
-    );
+    return (['singular', 'plural'] as const).map((number) => [
+      genderLabel(entry),
+      word,
+      number === 'singular' ? 'Jednotné' : 'Množné',
+      ...cases.map((_, index) => entry?.[number][index].join(', ') || '—'),
+      link,
+    ]);
   });
+}
+
+function csvCell(value: string): string {
+  const safeValue = /^[=+@\-\t\r]/.test(value) ? `'${value}` : value;
+  return `"${safeValue.replaceAll('"', '""')}"`;
 }
 
 export function csvText(results: Lookup[]): string {
   const rows = [headers, ...exportRows(results)];
-  const csv = rows
-    .map((row) =>
-      row
-        .map((value) => {
-          const safeValue = /^[=+@\-\t\r]/.test(value) ? `'${value}` : value;
-          return `"${safeValue.replaceAll('"', '""')}"`;
-        })
-        .join(';'),
-    )
-    .join('\r\n');
-
-  return `\ufeff${csv}`;
+  return `\ufeff${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
 }
 
 function download(data: BlobPart, type: string, name: string): void {
@@ -77,6 +50,178 @@ function download(data: BlobPart, type: string, name: string): void {
   anchor.download = name;
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+
+async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
+  const { default: ExcelJS } = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'České pády';
+
+  const sheet = workbook.addWorksheet('České pády', {
+    views: [{ state: 'frozen', xSplit: 3, ySplit: 1 }],
+  });
+  const rows = exportRows(results);
+  sheet.addRows([headers, ...rows]);
+
+  const widths = [20, 22, 14, 18, 18, 18, 18, 18, 18, 18, 52];
+  sheet.columns.forEach((column, index) => {
+    column.width = widths[index];
+    column.alignment = {
+      vertical: 'middle',
+      wrapText: index >= 3,
+    };
+  });
+
+  const header = sheet.getRow(1);
+  header.height = 24;
+  header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  header.alignment = { horizontal: 'center', vertical: 'middle' };
+  header.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF2459DB' },
+  };
+
+  rows.forEach((_, index) => {
+    const row = sheet.getRow(index + 2);
+    row.height = 24;
+    row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+
+    if (Math.floor(index / 2) % 2 === 1) {
+      row.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF4F7FC' },
+        };
+      });
+    }
+
+    if (index % 2 === 1) {
+      row.eachCell((cell) => {
+        cell.border = {
+          bottom: { style: 'thin', color: { argb: 'FFD5DEEB' } },
+        };
+      });
+    }
+  });
+
+  sheet.autoFilter = { from: 'A1', to: 'K1' };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  download(
+    buffer as ArrayBuffer,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    `${filename}.xlsx`,
+  );
+}
+
+async function loadPdfFont(): Promise<string> {
+  const fontResponse = await fetch(
+    new URL('./fonts/NotoSans-Regular.ttf', document.baseURI),
+  );
+
+  if (!fontResponse.ok) {
+    throw new Error('Písmo pro PDF se nepodařilo načíst. Zkuste export znovu.');
+  }
+
+  const bytes = new Uint8Array(await fontResponse.arrayBuffer());
+  let binary = '';
+  for (let index = 0; index < bytes.length; index += 8_192) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 8_192));
+  }
+  return btoa(binary);
+}
+
+async function exportPdf(results: Lookup[], filename: string): Promise<void> {
+  const [{ jsPDF }, { default: autoTable }, font] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+    loadPdfFont(),
+  ]);
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  pdf.addFileToVFS('NotoSans.ttf', font);
+  pdf.addFont('NotoSans.ttf', 'NotoSans', 'normal');
+  pdf.setFont('NotoSans');
+
+  const cards = entriesForExport(results);
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 8;
+  const gap = 6;
+  const cardWidth = (pageWidth - margin * 2 - gap) / 2;
+  const cardHeight = (pageHeight - margin * 2 - gap) / 2;
+
+  cards.forEach(({ result, entry }, index) => {
+    const position = index % 4;
+    if (index > 0 && position === 0) pdf.addPage();
+
+    const column = position % 2;
+    const row = Math.floor(position / 2);
+    const x = margin + column * (cardWidth + gap);
+    const y = margin + row * (cardHeight + gap);
+    const contentX = x + 4;
+    const contentWidth = cardWidth - 8;
+
+    pdf.setDrawColor(218, 227, 238);
+    pdf.setLineWidth(0.25);
+    pdf.roundedRect(x, y, cardWidth, cardHeight, 2, 2);
+
+    pdf.setFontSize(15);
+    pdf.text(entry?.lemma || result.word, contentX, y + 10);
+
+    pdf.setFontSize(6.8);
+    pdf.setTextColor(75, 94, 119);
+    pdf.textWithLink('Internetová jazyková příručka · ÚJČ', contentX, y + 16, {
+      url: result.ijp.url,
+    });
+
+    pdf.setFontSize(8);
+    pdf.setTextColor(30, 41, 59);
+    pdf.text(`Rod: ${genderLabel(entry)}`, contentX, y + 23);
+
+    if (entry) {
+      autoTable(pdf, {
+        startY: y + 28,
+        tableWidth: contentWidth,
+        head: [['Pád', 'Jednotné číslo', 'Množné číslo']],
+        body: cases.map((name, caseIndex) => [
+          name,
+          entry.singular[caseIndex].join(', ') || '—',
+          entry.plural[caseIndex].join(', ') || '—',
+        ]),
+        styles: {
+          font: 'NotoSans',
+          fontStyle: 'normal',
+          fontSize: 7.2,
+          cellPadding: 1.6,
+          overflow: 'linebreak',
+          valign: 'middle',
+        },
+        headStyles: {
+          fontStyle: 'normal',
+          fillColor: [36, 89, 219],
+          textColor: [255, 255, 255],
+        },
+        alternateRowStyles: { fillColor: [247, 249, 252] },
+        columnStyles: {
+          0: { cellWidth: 14 },
+          1: { cellWidth: (contentWidth - 14) / 2 },
+          2: { cellWidth: (contentWidth - 14) / 2 },
+        },
+        margin: { left: contentX, right: pageWidth - contentX - contentWidth },
+        pageBreak: 'avoid',
+      });
+    } else {
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 116, 139);
+      const message = result.ijp.message || 'Tvary nebyly nalezeny.';
+      pdf.text(pdf.splitTextToSize(message, contentWidth), contentX, y + 32);
+    }
+  });
+
+  download(pdf.output('arraybuffer'), 'application/pdf', `${filename}.pdf`);
 }
 
 export async function exportData(
@@ -95,119 +240,9 @@ export async function exportData(
   }
 
   if (format === 'xlsx') {
-    const { default: ExcelJS } = await import('exceljs');
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'České pády';
-
-    const sheet = workbook.addWorksheet('České pády');
-    sheet.addRows([headers, ...exportRows(results)]);
-    const widths = [22, 32, 30, 24, 16, 12, 45, 30, 26, 60];
-    sheet.columns.forEach((column, index) => {
-      column.width = widths[index];
-    });
-    sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    sheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF2459DB' },
-    };
-    sheet.views = [{ state: 'frozen', ySplit: 1 }];
-    sheet.autoFilter = { from: 'A1', to: 'J1' };
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    download(
-      buffer as ArrayBuffer,
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      `${filename}.xlsx`,
-    );
+    await exportXlsx(results, filename);
     return;
   }
 
-  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
-    import('jspdf'),
-    import('jspdf-autotable'),
-  ]);
-  const fontResponse = await fetch(
-    new URL('./fonts/NotoSans-Regular.ttf', document.baseURI),
-  );
-
-  if (!fontResponse.ok) {
-    throw new Error('Písmo pro PDF se nepodařilo načíst. Zkuste export znovu.');
-  }
-
-  const bytes = new Uint8Array(await fontResponse.arrayBuffer());
-  let binary = '';
-  for (let index = 0; index < bytes.length; index += 8_192) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + 8_192));
-  }
-
-  const documentPdf = new jsPDF();
-  documentPdf.addFileToVFS('NotoSans.ttf', btoa(binary));
-  documentPdf.addFont('NotoSans.ttf', 'NotoSans', 'normal');
-  documentPdf.setFont('NotoSans');
-
-  let firstPage = true;
-  for (const result of results) {
-    const entries = result.ijp.entries.length ? result.ijp.entries : [null];
-
-    for (const entry of entries) {
-      if (!firstPage) documentPdf.addPage();
-      firstPage = false;
-
-      documentPdf.setFontSize(21);
-      documentPdf.text(result.word, 14, 22);
-      documentPdf.setFontSize(10);
-      documentPdf.text('Internetová jazyková příručka · ÚJČ', 14, 32);
-
-      const description = entry
-        ? `${entry.lemma} · ${entry.gender ? genders[entry.gender] : 'Rod neurčen'}`
-        : result.ijp.message || result.ijp.status;
-      documentPdf.text(documentPdf.splitTextToSize(description, 180), 14, 40);
-
-      if (entry) {
-        autoTable(documentPdf, {
-          startY: 55,
-          tableWidth: 181,
-          head: [['Pád', 'Jednotné číslo', 'Množné číslo']],
-          body: cases.map((name, index) => [
-            name,
-            entry.singular[index].join(', ') || '—',
-            entry.plural[index].join(', ') || '—',
-          ]),
-          styles: {
-            font: 'NotoSans',
-            fontStyle: 'normal',
-            fontSize: 10,
-            cellPadding: 4,
-          },
-          headStyles: {
-            fontStyle: 'normal',
-            fillColor: [36, 89, 219],
-          },
-          columnStyles: {
-            0: { cellWidth: 25 },
-            1: { cellWidth: 78 },
-            2: { cellWidth: 78 },
-          },
-          margin: { bottom: 40 },
-        });
-      }
-
-      documentPdf.setFontSize(8);
-      documentPdf.text(
-        `Ověřeno: ${new Date(result.checkedAt).toLocaleString('cs-CZ')}`,
-        14,
-        265,
-      );
-      documentPdf.textWithLink('Otevřít původní zdroj', 14, 273, {
-        url: result.ijp.url,
-      });
-    }
-  }
-
-  download(
-    documentPdf.output('arraybuffer'),
-    'application/pdf',
-    `${filename}.pdf`,
-  );
+  await exportPdf(results, filename);
 }

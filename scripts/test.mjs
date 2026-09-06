@@ -27,7 +27,7 @@ const { parseIjp, validateWord, lookup } =
   await import('../.test-build/dictionary.mjs');
 const { handleDictionary } = await import('../.test-build/handler.mjs');
 const { suggest } = await import('../.test-build/suggestions.mjs');
-const { csvText, exportRows, exportData } =
+const { headers, csvText, exportRows, exportData } =
   await import('../.test-build/exports.mjs');
 
 const caseRows = Array.from(
@@ -119,8 +119,45 @@ const fixture = {
 
 assert.ok(csvText([fixture]).startsWith('\ufeff'));
 assert.ok(csvText([fixture]).includes('ženě'));
-assert.equal(exportRows([fixture]).length, 14);
-assert.ok(csvText([{ ...fixture, word: '=SUM(1)' }]).includes("'=SUM(1)"));
+assert.deepEqual(headers, [
+  'Rod',
+  'Slovo',
+  'Číslo',
+  '1. pád',
+  '2. pád',
+  '3. pád',
+  '4. pád',
+  '5. pád',
+  '6. pád',
+  '7. pád',
+  'Odkaz',
+]);
+
+const rows = exportRows([fixture]);
+assert.equal(rows.length, 2);
+assert.equal(rows[0][0], 'Ž · ženský');
+assert.equal(rows[0][2], 'Jednotné');
+assert.equal(rows[1][2], 'Množné');
+assert.equal(rows[0][5], 'ženě');
+assert.equal(rows[0][10], fixture.ijp.url);
+
+const csv = csvText([fixture]);
+assert.ok(csv.startsWith('\ufeff"Rod","Slovo","Číslo"'));
+assert.ok(!csv.includes('Stav zdroje'));
+assert.ok(!csv.includes('Ověřeno'));
+await writeFile('.test-build/export-layout.csv', csv);
+
+const formulaFixture = {
+  ...fixture,
+  ijp: {
+    ...fixture.ijp,
+    entries: fixture.ijp.entries.map((entry) => ({
+      ...entry,
+      lemma: '=SUM(1)',
+    })),
+  },
+};
+assert.ok(csvText([formulaFixture]).includes("'=SUM(1)"));
 let downloaded;
 const originalCreateObjectUrl = URL.createObjectURL;
 const originalRevokeObjectUrl = URL.revokeObjectURL;
@@ -137,8 +174,13 @@ globalThis.document = {
 await exportData('xlsx', [fixture]);
 const { default: ExcelJS } = await import('exceljs');
 const workbook = new ExcelJS.Workbook();
-await workbook.xlsx.load(await downloaded.arrayBuffer());
-assert.equal(workbook.worksheets[0].getCell('G4').value, 'ženě');
+const xlsxBuffer = Buffer.from(await downloaded.arrayBuffer());
+await writeFile('.test-build/export-layout.xlsx', xlsxBuffer);
+await workbook.xlsx.load(xlsxBuffer);
+assert.equal(workbook.worksheets[0].getCell('F2').value, 'ženě');
+assert.equal(workbook.worksheets[0].getCell('C2').value, 'Jednotné');
+assert.equal(workbook.worksheets[0].getCell('C3').value, 'Množné');
+assert.equal(workbook.worksheets[0].getCell('K2').value, fixture.ijp.url);
 
 globalThis.fetch = async (url) => {
   assert.equal(
@@ -147,11 +189,32 @@ globalThis.fetch = async (url) => {
   );
   return new Response(await readFile('public/fonts/NotoSans-Regular.ttf'));
 };
-await exportData('pdf', [fixture]);
+const pdfFixtures = [
+  ['žena', 'F'],
+  ['pes', 'M'],
+  ['hrad', 'I'],
+  ['město', 'N'],
+].map(([word, gender]) => ({
+  ...fixture,
+  word,
+  requested: word,
+  ijp: {
+    ...fixture.ijp,
+    url: `https://prirucka.ujc.cas.cz/?slovo=${encodeURIComponent(word)}`,
+    entries: fixture.ijp.entries.map((entry) => ({
+      ...entry,
+      lemma: word,
+      gender,
+    })),
+  },
+}));
+
+await exportData('pdf', pdfFixtures);
 const pdf = Buffer.from(await downloaded.arrayBuffer());
 assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
 assert.ok(pdf.includes(Buffer.from('/ToUnicode')));
-await writeFile('.test-build/unicode.pdf', pdf);
+assert.equal(pdf.toString('latin1').match(/\/Type \/Page\b/g)?.length, 1);
+await writeFile('.test-build/export-layout.pdf', pdf);
 
 globalThis.fetch = originalFetch;
 URL.createObjectURL = originalCreateObjectUrl;
@@ -159,7 +222,7 @@ URL.revokeObjectURL = originalRevokeObjectUrl;
 delete globalThis.document;
 
 console.log(
-  'PASS: IJP parsing, four genders, seven cases, footnotes, plural-only nouns, input validation, suggestions, auth rejection, single-source CSV/XLSX/PDF exports and embedded Unicode PDF font.',
+  'PASS: IJP parsing, four genders, seven cases, footnotes, plural-only nouns, input validation, suggestions, auth rejection, transposed CSV/XLSX exports and compact four-card Unicode PDF export.',
 );
 
 if (process.env.LIVE_TEST === '1') {
