@@ -1,9 +1,66 @@
-export type Gender='M'|'I'|'F'|'N';
-export const genders:Record<Gender,string>={M:'M · životný',I:'M · neživotný',F:'Ž · ženský',N:'S · střední'};
-export type Paradigm={lemma:string;gender:Gender|null;singular:string[][];plural:string[][];tags?:Record<string,string[]>};
-export type Source={status:'ok'|'not_found'|'error';url:string;entries:Paradigm[];message?:string;model?:string;guessed?:boolean;acknowledgements?:string[]};
-export type Lookup={word:string;requested:string;checkedAt:string;ijp:Source;morphodita:Source};
-export type Saved={id:string;word:string;result:Lookup;updated_at:string};
-export const cases=['1. pád','2. pád','3. pád','4. pád','5. pád','6. pád','7. pád'];
-export const questions=['Kdo? Co?','Koho? Čeho?','Komu? Čemu?','Koho? Co?','Oslovujeme, voláme','O kom? O čem?','S kým? S čím?'];
-export const caseNames=['Nominativ','Genitiv','Dativ','Akuzativ','Vokativ','Lokál','Instrumentál'];
+export type Gender = 'M' | 'I' | 'F' | 'N';
+
+export const genders: Record<Gender, string> = {
+  M: 'M · životný',
+  I: 'M · neživotný',
+  F: 'Ž · ženský',
+  N: 'S · střední',
+};
+
+export type Paradigm = {
+  lemma: string;
+  gender: Gender | null;
+  singular: string[][];
+  plural: string[][];
+};
+
+export type Source = {
+  status: 'ok' | 'not_found' | 'error';
+  url: string;
+  entries: Paradigm[];
+  message?: string;
+};
+
+export type Lookup = {
+  word: string;
+  requested: string;
+  checkedAt: string;
+  ijp: Source;
+};
+
+export type Saved = {
+  id: string;
+  word: string;
+  result: Lookup;
+  updated_at: string;
+};
+
+export const cases = [
+  '1. pád',
+  '2. pád',
+  '3. pád',
+  '4. pád',
+  '5. pád',
+  '6. pád',
+  '7. pád',
+];
+
+export const questions = [
+  'Kdo? Co?',
+  'Koho? Čeho?',
+  'Komu? Čemu?',
+  'Koho? Co?',
+  'Oslovujeme, voláme',
+  'O kom? O čem?',
+  'S kým? S čím?',
+];
+
+export const caseNames = [
+  'Nominativ',
+  'Genitiv',
+  'Dativ',
+  'Akuzativ',
+  'Vokativ',
+  'Lokál',
+  'Instrumentál',
+];

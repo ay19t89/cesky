@@ -61,3 +61,15 @@
   height: 50px;
   padding: 0;
 }
+
+.sourcegrid-single {
+  grid-template-columns: 1fr;
+}
+
+.singlesource {
+  max-width: 620px;
+}
+
+.comparison-single [data-slot='table'] {
+  min-width: 620px;
+}

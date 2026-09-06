@@ -1,2 +1,3 @@
-import {handleDictionary} from '@/lib/handler';
-export const GET=handleDictionary;
+import { handleDictionary } from '@/lib/handler';
+
+export const GET = handleDictionary;

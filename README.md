@@ -1,32 +1,51 @@
 # České pády
 
-Czech noun declension checker with IJP (ÚJČ) and MorphoDiTa/MorfFlex (ÚFAL), a private Supabase dictionary, and Unicode CSV, XLSX and PDF exports.
+Czech noun declension checker using the Internetová jazyková příručka (ÚJČ),
+a private Supabase dictionary, and Unicode CSV, XLSX and PDF exports.
 
-## Finish Supabase setup
+## Supabase setup
 
-The supplied project URL and **public publishable key** are configured in `lib/config.ts`. No service-role key is needed in the application. The publishable key cannot create tables or manage users.
+The supplied project URL and public publishable key are configured in
+`lib/config.ts`. The application does not need a service-role key.
 
-1. For a fresh project, open the Supabase SQL editor and run `supabase/migrations/202609060001_dictionary.sql` once. It creates the word table and per-user row-level access policy.
-2. If you already ran the older setup that used `dictionary_members`, run `supabase/migrations/202609060002_allow_all_authenticated.sql` instead. It replaces the old allowlist policy without deleting saved words.
-3. In Authentication → Users, create the email/password accounts that may use the site. Every authenticated account is accepted automatically, while row-level security keeps each account's words private.
-4. Sign in on the website and check a word, then choose **Uložit slovo**. Reload and open **Můj slovník** to verify persistence.
+1. Open your project's Supabase SQL editor.
+2. Run `supabase/migrations/202609060001_dictionary.sql` once. This is the
+   complete setup for a new database.
+3. Create the permitted email/password accounts in Authentication → Users.
+4. Sign in on the website and check a word. A successful result is saved
+   automatically. Click **Uloženo** to remove it from the dictionary.
+
+Every account in Supabase Authentication may use the application. Row-level
+security still limits every account to its own saved words. The website does
+not provide a public sign-up screen.
 
 ## GitHub Pages
 
-Yes: the frontend has a separate static build. GitHub Pages cannot execute Python or a dictionary proxy, so its frontend calls a Supabase Edge Function. Both deployments use the same TypeScript implementation of the supplied Python parser.
+The frontend has a separate static build. Since GitHub Pages cannot run the
+dictionary proxy, the static frontend calls the included Supabase Edge
+Function.
 
 1. Install Node.js 22.13+ and run `npm ci`.
-2. Finish the Supabase setup above.
-3. Install/sign in to the Supabase CLI with your own administrator account. Run:
+2. Complete the Supabase setup above.
+3. Install and sign in to the Supabase CLI, then run:
+
    ```sh
    npm run prepare:edge
    supabase functions deploy dictionary --project-ref vmcegdasdeucdrxngjfv
    ```
-   `verify_jwt = false` disables the legacy gateway check only. The function itself validates the bearer token through Supabase Auth on every request.
-4. Put this folder's source into your GitHub repository. In Settings → Pages select **GitHub Actions**. The included workflow publishes on pushes to `main`. `npm run build:pages` creates `dist-pages/index.html` with relative asset paths, so repository subpaths work.
-5. No service keys, access tokens, or passwords belong in GitHub. The public configuration is intentionally visible; authentication and database RLS are the security boundary. The static page itself is public, but anonymous users cannot query saved words or use the dictionary function.
 
-The private Sites deployment uses `/api/dictionary` directly, so it does not require the Edge Function. Both routes verify the Supabase session and membership.
+   The Edge Function verifies the bearer token through Supabase Auth on every
+   request.
+
+4. Put this source in a GitHub repository. In Settings → Pages, select
+   **GitHub Actions**. The included workflow publishes pushes to `main`.
+
+No service keys, access tokens or passwords belong in GitHub. The public
+configuration is intentionally visible; authentication and database RLS are
+the security boundary.
+
+The private Sites deployment uses `/api/dictionary` directly and does not need
+the Edge Function.
 
 ## Local development and checks
 
@@ -41,23 +60,37 @@ npm run build:pages
 
 ## Data handling
 
-- Scope: **podstatná jména** (nouns). Verbs/adjectives do not all have one of the four noun genders. Unknown genders remain unspecified.
-- M → masculine animate; I → masculine inanimate; F → feminine (Ž); N → neuter (S). Lemmas/senses and genders from MorphoDiTa are kept separately; conflicting sources are never silently combined.
-- Suggestions use a small built-in set of common nouns and the user's saved words, ignoring accents and allowing small spelling errors. After login a debounced IJP request also suggests its resolved spelling. This is not an exhaustive Czech spellchecker. IJP accent corrections are displayed explicitly, and the corrected lemma is submitted to both sources.
-- All seven singular and plural positions are preserved. Missing forms appear as a dash, not guessed replacements. IJP footnote numbers are removed; follow the source link for usage notes. Source failure is distinct from a missing entry.
-- MorphoDiTa is first queried without guessing. If no noun is found, it retries with the requested `guesser=yes` and labels generated results as estimates. The original tags and model identifier remain in the saved JSON. Nonstandard/rare variants are not silently filtered.
-- Save is explicit. It upserts the current word for the authenticated user. In **Můj slovník**, gender filters affect exports; otherwise exports include the displayed result. CSV is UTF-8 with BOM and quoted semicolon-separated fields; formula-like values are escaped. XLSX uses string cells. PDF embeds the included OFL-licensed Noto Sans font.
-- Dictionary fetches use fixed HTTPS destinations, validated single words and timeouts. User tokens are forwarded only to the configured Supabase project. Upstream HTML is parsed as text and is never rendered as HTML.
-- The optional WebMCP `check_czech_noun` tool uses the same authenticated lookup action and does not save words.
+- The application checks nouns in the Internetová jazyková příručka only.
+- M means masculine animate, I masculine inanimate, F feminine (Ž), and N
+  neuter (S). Unknown genders remain unspecified.
+- Suggestions use common nouns and the user's saved words. They ignore accents
+  and tolerate small spelling errors. After login, a delayed IJP request can
+  also return the spelling resolved by the reference book.
+- All seven singular and plural positions are retained. Missing forms appear as
+  a dash. IJP footnote numbers are removed; the result links to the original
+  entry for additional usage notes.
+- A successful lookup is saved automatically for the authenticated user.
+  Clicking **Uloženo** removes it; clicking **Uložit slovo** adds it again.
+- Gender filters in **Můj slovník** also filter exports. CSV is UTF-8 with BOM,
+  XLSX stores strings, and PDF embeds the OFL-licensed Noto Sans font.
+- Dictionary requests use a fixed HTTPS destination, validated single-word
+  input and timeouts. Upstream HTML is parsed as text and never rendered as
+  HTML.
+- The optional WebMCP tool performs the same authenticated lookup and automatic
+  save action as the visible interface.
 
-## Sources and licenses
+## Source and license
 
 - Internetová jazyková příručka: https://prirucka.ujc.cas.cz/
-- MorphoDiTa and model acknowledgements: https://ufal.mff.cuni.cz/morphodita and the `acknowledgements` links returned in each response. This app is not an official ÚJČ or ÚFAL product.
 - Noto Sans: `public/fonts/OFL.txt`.
 
-The website depends on the availability and HTML/API formats of the two upstream sources. Changes in the IJP layout may require a parser update.
+This application is not an official ÚJČ product. It depends on the availability
+and HTML structure of the reference-book website.
 
 ## Verification status
 
-Automated checks passed for all four genders against the live sources, accent correction, parser edge cases, rejected unauthenticated requests, CSV contents, XLSX round-trip, and PDF text extraction with Czech accents. Both Sites and static Pages builds pass. Authenticated save/reload and multi-account RLS still need verification after the administrator creates and approves accounts. Browser interaction tests and the optional WebMCP contract were not run; a supported WebMCP validation context was not available.
+Automated checks cover all four genders, accent correction, parser edge cases,
+rejected unauthenticated requests, single-source CSV contents, XLSX round-trip,
+and PDF text extraction with Czech accents. Both Sites and static Pages builds
+are checked before publication. An authenticated save/remove flow still needs a
+manual check after the new Supabase table is created.
