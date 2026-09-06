@@ -7,9 +7,11 @@ export async function handleDictionary(request:Request):Promise<Response>{
     const headers={apikey:SUPABASE_KEY,Authorization:token};
     const user=await fetch(SUPABASE_URL+'/auth/v1/user',{headers,signal:AbortSignal.timeout(8000)});
     if(!user.ok)return Response.json({error:'Přihlášení vypršelo. Přihlaste se znovu.'},{status:401});
+    const profile=await user.json() as {email?:string};
     const member=await fetch(SUPABASE_URL+'/rest/v1/dictionary_members?select=user_id&limit=1',{headers,signal:AbortSignal.timeout(8000)});
-    const members=member.ok?await member.json():null;
-    if(!Array.isArray(members)||!members.length)return Response.json({error:'Účet zatím nemá přístup. Správce musí dokončit nastavení databáze a schválit účet.'},{status:403});
+    if(!member.ok)return Response.json({error:'Přihlášení funguje, ale tabulka dictionary_members není správně nastavená. Spusťte opravný SQL soubor v Supabase.'},{status:503});
+    const members=await member.json();
+    if(!Array.isArray(members)||!members.length)return Response.json({error:`Přihlášení funguje, ale účet ${profile.email||''} ještě není přidaný v dictionary_members. Spusťte opravný SQL soubor v Supabase.`},{status:403});
     const url=new URL(request.url);const word=validateWord(url.searchParams.get('word'));
     if(url.searchParams.get('action')==='suggest'){
       const data=await fetchIjp(word);

@@ -11,6 +11,8 @@ The supplied project URL and **public publishable key** are configured in `lib/c
 3. Run the membership statement at the bottom of the migration, replacing `YOUR_EMAIL_HERE` with the account's email. Only approved members can use lookups and storage. Every member has a separate private dictionary.
 4. Sign in on the website and check a word, then choose **Uložit slovo**. Reload and open **Můj slovník** to verify persistence. A public key alone cannot complete these administrator actions.
 
+For the existing `ay19t89@gmail.com` account, `supabase/fix-access-ay19t89.sql` contains the exact one-time approval query. A successful login proves that Supabase Auth is configured; the separate `dictionary_members` row is the allowlist that protects dictionary lookups and saved data.
+
 ## GitHub Pages
 
 Yes: the frontend has a separate static build. GitHub Pages cannot execute Python or a dictionary proxy, so its frontend calls a Supabase Edge Function. Both deployments use the same TypeScript implementation of the supplied Python parser.

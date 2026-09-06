@@ -1,0 +1,57 @@
+/* One prominent overview button, with the four gender filters below. */
+.genderfilters {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 28px 24px;
+  width: calc(100% - 56px) !important;
+  max-width: none !important;
+  height: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.genderfilters [data-slot='tabs-trigger'] {
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #dbe3ee !important;
+  background: #fff !important;
+  color: #334e72 !important;
+  box-shadow: none !important;
+}
+
+.genderfilters [data-slot='tabs-trigger']:hover {
+  background: #edf3ff !important;
+}
+
+.genderfilters [data-slot='tabs-trigger'][data-active] {
+  border-color: #2459db !important;
+  background: #2459db !important;
+  color: #fff !important;
+}
+
+.genderfilters [data-slot='tabs-trigger']:first-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(100%, 260px);
+  min-height: 50px;
+  font-size: 17px;
+}
+
+@media (max-width: 560px) {
+  .genderfilters {
+    gap: 7px;
+    margin-inline: 18px;
+    width: calc(100% - 36px) !important;
+  }
+
+  .genderfilters [data-slot='tabs-trigger'] {
+    padding-inline: 5px;
+    font-size: 12px;
+  }
+
+  .genderfilters [data-slot='tabs-trigger']:first-child {
+    font-size: 16px;
+  }
+}
