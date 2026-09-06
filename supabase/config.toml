@@ -3,4 +3,4 @@ project_id = "vmcegdasdeucdrxngjfv"
 [functions.dictionary]
 verify_jwt = false
 # JWT verification is performed explicitly by /auth/v1/user in handler.ts,
-# followed by dictionary_members RLS. This supports current signing keys.
+# followed by per-user RLS on czech_words. This supports current signing keys.

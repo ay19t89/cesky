@@ -30,8 +30,10 @@ assert.equal((await handleDictionary(new Request('https://example.com?word=pes')
 const originalFetch=globalThis.fetch;
 globalThis.fetch=async()=>new Response('{}',{status:401});
 assert.equal((await handleDictionary(new Request('https://example.com?word=pes',{headers:{Authorization:'Bearer fake'}}))).status,401);
-globalThis.fetch=async url=>String(url).includes('/auth/v1/user')?Response.json({id:'test'}):Response.json([]);
-assert.equal((await handleDictionary(new Request('https://example.com?word=pes',{headers:{Authorization:'Bearer fake'}}))).status,403);
+const requested=[];
+globalThis.fetch=async url=>{requested.push(String(url));return String(url).includes('/auth/v1/user')?Response.json({id:'test'}):Response.json([])};
+assert.equal((await handleDictionary(new Request('https://example.com?word=pes',{headers:{Authorization:'Bearer fake'}}))).status,200);
+assert.ok(!requested.some(url=>url.includes('dictionary_members')));
 globalThis.fetch=originalFetch;
 const fixture={word:'žena',requested:'žena',checkedAt:'2026-09-06T12:00:00Z',ijp:parsed,morphodita:parsed};
 assert.ok(csvText([fixture]).startsWith('\ufeff'));assert.ok(csvText([fixture]).includes('ženě'));assert.equal(exportRows([fixture]).length,84);

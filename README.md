@@ -6,12 +6,10 @@ Czech noun declension checker with IJP (ÚJČ) and MorphoDiTa/MorfFlex (ÚFAL), 
 
 The supplied project URL and **public publishable key** are configured in `lib/config.ts`. No service-role key is needed in the application. The publishable key cannot create tables or manage users.
 
-1. Open your project's Supabase SQL editor and run `supabase/migrations/202609060001_dictionary.sql` once. It creates two new tables and per-user row-level access policies. If tables with these names already exist, inspect them before applying the migration; it intentionally does not overwrite them.
-2. In Authentication → Users, create your email/password account. Disable public sign-ups in Authentication settings. The app has no signup flow.
-3. Run the membership statement at the bottom of the migration, replacing `YOUR_EMAIL_HERE` with the account's email. Only approved members can use lookups and storage. Every member has a separate private dictionary.
-4. Sign in on the website and check a word, then choose **Uložit slovo**. Reload and open **Můj slovník** to verify persistence. A public key alone cannot complete these administrator actions.
-
-For the existing `ay19t89@gmail.com` account, `supabase/fix-access-ay19t89.sql` contains the exact one-time approval query. A successful login proves that Supabase Auth is configured; the separate `dictionary_members` row is the allowlist that protects dictionary lookups and saved data.
+1. For a fresh project, open the Supabase SQL editor and run `supabase/migrations/202609060001_dictionary.sql` once. It creates the word table and per-user row-level access policy.
+2. If you already ran the older setup that used `dictionary_members`, run `supabase/migrations/202609060002_allow_all_authenticated.sql` instead. It replaces the old allowlist policy without deleting saved words.
+3. In Authentication → Users, create the email/password accounts that may use the site. Every authenticated account is accepted automatically, while row-level security keeps each account's words private.
+4. Sign in on the website and check a word, then choose **Uložit slovo**. Reload and open **Můj slovník** to verify persistence.
 
 ## GitHub Pages
 
@@ -24,9 +22,9 @@ Yes: the frontend has a separate static build. GitHub Pages cannot execute Pytho
    npm run prepare:edge
    supabase functions deploy dictionary --project-ref vmcegdasdeucdrxngjfv
    ```
-   `verify_jwt = false` disables the legacy gateway check only. The function itself validates the bearer token through Supabase Auth and checks the approved-member table on every request.
+   `verify_jwt = false` disables the legacy gateway check only. The function itself validates the bearer token through Supabase Auth on every request.
 4. Put this folder's source into your GitHub repository. In Settings → Pages select **GitHub Actions**. The included workflow publishes on pushes to `main`. `npm run build:pages` creates `dist-pages/index.html` with relative asset paths, so repository subpaths work.
-5. No service keys, access tokens, or passwords belong in GitHub. The public configuration is intentionally visible; database RLS is the security boundary. The static page itself is public, but unapproved/anonymous users cannot query saved words or use the dictionary function.
+5. No service keys, access tokens, or passwords belong in GitHub. The public configuration is intentionally visible; authentication and database RLS are the security boundary. The static page itself is public, but anonymous users cannot query saved words or use the dictionary function.
 
 The private Sites deployment uses `/api/dictionary` directly, so it does not require the Edge Function. Both routes verify the Supabase session and membership.
 
