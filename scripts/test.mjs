@@ -7,6 +7,7 @@ await mkdir('.test-build', { recursive: true });
 for (const name of [
   'types',
   'config',
+  'ijp-url',
   'dictionary',
   'handler',
   'suggestions',
@@ -110,6 +111,22 @@ const fixtureSource = parseIjp(
    </table>`,
   'žena',
 );
+assert.equal(
+  parseIjp(
+    `<div class="hlavicka"><h2><strong>moře</strong></h2></div>
+     <p class="polozky">rod: s.</p>
+     <table class="para">
+       <tr><td></td><td>jednotné číslo</td><td>množné číslo</td></tr>
+       ${Array.from(
+         { length: 7 },
+         (_, index) =>
+           `<tr><td>${index + 1}. pád</td><td>moře</td><td>moře</td></tr>`,
+       ).join('')}
+     </table>`,
+    'more',
+  ).url,
+  'https://prirucka.ujc.cas.cz/?slovo=mo%C5%99e',
+);
 const fixture = {
   word: 'žena',
   requested: 'žena',
@@ -144,6 +161,24 @@ assert.equal(rows[0][2], 'Jednotné');
 assert.equal(rows[1][2], 'Množné');
 assert.equal(rows[0][5], 'ženě');
 assert.equal(rows[0][10], fixture.ijp.url);
+
+const correctedFixture = {
+  ...fixture,
+  word: 'moře',
+  requested: 'more',
+  ijp: {
+    ...fixture.ijp,
+    url: 'https://prirucka.ujc.cas.cz/?slovo=more',
+    entries: fixture.ijp.entries.map((entry) => ({
+      ...entry,
+      lemma: 'moře',
+    })),
+  },
+};
+assert.equal(
+  exportRows([correctedFixture])[0][10],
+  'https://prirucka.ujc.cas.cz/?slovo=mo%C5%99e',
+);
 
 const csv = csvText([fixture]);
 assert.ok(csv.startsWith('\ufeff"Rod","Slovo","Číslo"'));

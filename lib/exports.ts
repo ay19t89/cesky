@@ -1,4 +1,5 @@
 import { cases, genders, type Lookup, type Paradigm } from './types';
+import { ijpUrlForWord } from './ijp-url';
 
 export const headers = ['Rod', 'Slovo', 'Číslo', ...cases, 'Odkaz'];
 
@@ -37,7 +38,7 @@ function genderLabel(entry: Paradigm | null): string {
 export function exportRows(results: Lookup[]): string[][] {
   return entriesForExport(results).flatMap(({ result, entry }) => {
     const word = entry?.lemma || result.word;
-    const link = result.ijp.url;
+    const link = ijpUrlForWord(word);
 
     return (['singular', 'plural'] as const).map((number) => [
       genderLabel(entry),
@@ -200,6 +201,8 @@ async function exportPdf(results: Lookup[], filename: string): Promise<void> {
   const cardHeight = (pageHeight - margin * 2 - gap) / 2;
 
   cards.forEach(({ result, entry }, index) => {
+    const word = entry?.lemma || result.word;
+    const sourceUrl = ijpUrlForWord(word);
     const position = index % 4;
     if (index > 0 && position === 0) pdf.addPage();
 
@@ -215,12 +218,12 @@ async function exportPdf(results: Lookup[], filename: string): Promise<void> {
     pdf.roundedRect(x, y, cardWidth, cardHeight, 2, 2);
 
     pdf.setFontSize(15);
-    pdf.text(entry?.lemma || result.word, contentX, y + 10);
+    pdf.text(word, contentX, y + 10);
 
     pdf.setFontSize(6.8);
     pdf.setTextColor(75, 94, 119);
     pdf.textWithLink('Internetová jazyková příručka · ÚJČ', contentX, y + 16, {
-      url: result.ijp.url,
+      url: sourceUrl,
     });
 
     pdf.setFontSize(8);

@@ -40,6 +40,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SUPABASE_URL } from '@/lib/config';
 import { compareCzechWords, exportData } from '@/lib/exports';
+import { ijpUrlForWord } from '@/lib/ijp-url';
 import { suggest } from '@/lib/suggestions';
 import { supabase } from '@/lib/supabase';
 import {
@@ -98,6 +99,7 @@ async function dictionaryRequest(
 }
 
 function SourceTitle({ source }: { source: Source }) {
+  const sourceUrl = ijpUrlForWord(source.entries[0]?.lemma || '');
   const status =
     source.status === 'ok'
       ? 'Načteno'
@@ -108,7 +110,11 @@ function SourceTitle({ source }: { source: Source }) {
   return (
     <div className="sourceheading singlesource">
       <span className={`dot ${source.status === 'ok' ? 'ok' : 'warn'}`} />
-      <a href={source.url} target="_blank" rel="noreferrer">
+      <a
+        href={source.entries.length ? sourceUrl : source.url}
+        target="_blank"
+        rel="noreferrer"
+      >
         Internetová jazyková příručka <ArrowUpRight size={14} />
       </a>
       <small>{status}</small>

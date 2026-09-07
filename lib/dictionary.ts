@@ -1,7 +1,6 @@
 import { load } from 'cheerio';
+import { ijpUrlForWord } from './ijp-url';
 import type { Gender, Lookup, Paradigm, Source } from './types';
-
-const IJP_BASE = 'https://prirucka.ujc.cas.cz/';
 
 function emptyParadigm(lemma: string, gender: Gender | null): Paradigm {
   return {
@@ -101,7 +100,7 @@ export function parseIjp(html: string, word: string): Source {
 
   return {
     status: entries.length ? 'ok' : 'not_found',
-    url: `${IJP_BASE}?slovo=${encodeURIComponent(word)}`,
+    url: ijpUrlForWord(entries[0]?.lemma || word),
     entries,
     message: entries.length
       ? undefined
@@ -133,13 +132,13 @@ function failedSource(url: string): Source {
 }
 
 export async function fetchIjp(word: string): Promise<Source> {
-  const url = `${IJP_BASE}?slovo=${encodeURIComponent(word)}`;
+  const url = ijpUrlForWord(word);
   return parseIjp(await (await fetchRemote(url)).text(), word);
 }
 
 export async function lookup(raw: unknown): Promise<Lookup> {
   const requested = validateWord(raw);
-  const url = `${IJP_BASE}?slovo=${encodeURIComponent(requested)}`;
+  const url = ijpUrlForWord(requested);
   const ijp = await fetchIjp(requested).catch(() => failedSource(url));
   const word = ijp.entries[0]?.lemma || requested;
 
