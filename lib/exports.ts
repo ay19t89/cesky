@@ -2,16 +2,32 @@ import { cases, genders, type Lookup, type Paradigm } from './types';
 
 export const headers = ['Rod', 'Slovo', 'Číslo', ...cases, 'Odkaz'];
 
+const czechCollator = new Intl.Collator('cs', {
+  sensitivity: 'base',
+  numeric: true,
+});
+
+export function compareCzechWords(left: string, right: string): number {
+  return czechCollator.compare(left, right);
+}
+
 type ExportEntry = {
   result: Lookup;
   entry: Paradigm | null;
 };
 
 function entriesForExport(results: Lookup[]): ExportEntry[] {
-  return results.flatMap((result) => {
-    const entries = result.ijp.entries.length ? result.ijp.entries : [null];
-    return entries.map((entry) => ({ result, entry }));
-  });
+  return results
+    .flatMap((result) => {
+      const entries = result.ijp.entries.length ? result.ijp.entries : [null];
+      return entries.map((entry) => ({ result, entry }));
+    })
+    .sort((left, right) =>
+      compareCzechWords(
+        left.entry?.lemma || left.result.word,
+        right.entry?.lemma || right.result.word,
+      ),
+    );
 }
 
 function genderLabel(entry: Paradigm | null): string {

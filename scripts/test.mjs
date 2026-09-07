@@ -27,7 +27,7 @@ const { parseIjp, validateWord, lookup } =
   await import('../.test-build/dictionary.mjs');
 const { handleDictionary } = await import('../.test-build/handler.mjs');
 const { suggest } = await import('../.test-build/suggestions.mjs');
-const { headers, csvText, exportRows, exportData } =
+const { headers, compareCzechWords, csvText, exportRows, exportData } =
   await import('../.test-build/exports.mjs');
 
 const caseRows = Array.from(
@@ -132,6 +132,10 @@ assert.deepEqual(headers, [
   '7. pád',
   'Odkaz',
 ]);
+assert.deepEqual(
+  ['žena', 'chata', 'hrad', 'čáp', 'citron', 'auto'].sort(compareCzechWords),
+  ['auto', 'citron', 'čáp', 'hrad', 'chata', 'žena'],
+);
 
 const rows = exportRows([fixture]);
 assert.equal(rows.length, 2);

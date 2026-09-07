@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SUPABASE_URL } from '@/lib/config';
-import { exportData } from '@/lib/exports';
+import { compareCzechWords, exportData } from '@/lib/exports';
 import { suggest } from '@/lib/suggestions';
 import { supabase } from '@/lib/supabase';
 import {
@@ -464,11 +464,13 @@ export default function Home() {
     }
   }
 
-  const visibleSaved = saved.filter(
-    (item) =>
-      gender === 'all' ||
-      item.result.ijp.entries.some((entry) => entry.gender === gender),
-  );
+  const visibleSaved = saved
+    .filter(
+      (item) =>
+        gender === 'all' ||
+        item.result.ijp.entries.some((entry) => entry.gender === gender),
+    )
+    .sort((left, right) => compareCzechWords(left.word, right.word));
 
   async function runExport(format: 'csv' | 'xlsx' | 'pdf') {
     setExporting(true);
