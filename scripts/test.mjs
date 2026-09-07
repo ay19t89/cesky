@@ -256,12 +256,31 @@ const pdfFixtures = [
   },
 }));
 
-await exportData('pdf', pdfFixtures);
-const pdf = Buffer.from(await downloaded.arrayBuffer());
-assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
-assert.ok(pdf.includes(Buffer.from('/ToUnicode')));
-assert.equal(pdf.toString('latin1').match(/\/Type \/Page\b/g)?.length, 1);
-await writeFile('.test-build/export-layout.pdf', pdf);
+await exportData('pdf-a4', pdfFixtures);
+const pdfA4 = Buffer.from(await downloaded.arrayBuffer());
+assert.equal(pdfA4.subarray(0, 5).toString(), '%PDF-');
+assert.ok(pdfA4.includes(Buffer.from('/ToUnicode')));
+assert.ok(pdfA4.includes(Buffer.from('/MediaBox [0 0 595.')));
+assert.equal(pdfA4.toString('latin1').match(/\/Type \/Page\b/g)?.length, 1);
+await writeFile('.test-build/export-layout-a4.pdf', pdfA4);
+
+const pdfA3Fixtures = Array.from({ length: 9 }, (_, index) => ({
+  ...pdfFixtures[index % pdfFixtures.length],
+  word: `slovo${index + 1}`,
+  ijp: {
+    ...pdfFixtures[index % pdfFixtures.length].ijp,
+    entries: pdfFixtures[index % pdfFixtures.length].ijp.entries.map(
+      (entry) => ({ ...entry, lemma: `slovo${index + 1}` }),
+    ),
+  },
+}));
+await exportData('pdf-a3', pdfA3Fixtures);
+const pdfA3 = Buffer.from(await downloaded.arrayBuffer());
+assert.equal(pdfA3.subarray(0, 5).toString(), '%PDF-');
+assert.ok(pdfA3.includes(Buffer.from('/ToUnicode')));
+assert.ok(pdfA3.includes(Buffer.from('/MediaBox [0 0 841.')));
+assert.equal(pdfA3.toString('latin1').match(/\/Type \/Page\b/g)?.length, 1);
+await writeFile('.test-build/export-layout-a3.pdf', pdfA3);
 
 globalThis.fetch = originalFetch;
 URL.createObjectURL = originalCreateObjectUrl;
@@ -269,7 +288,7 @@ URL.revokeObjectURL = originalRevokeObjectUrl;
 delete globalThis.document;
 
 console.log(
-  'PASS: IJP parsing, four genders, seven cases, footnotes, plural-only nouns, input validation, suggestions, auth rejection, transposed CSV/XLSX exports and compact four-card Unicode PDF export.',
+  'PASS: IJP parsing, four genders, seven cases, footnotes, plural-only nouns, input validation, suggestions, auth rejection, transposed CSV/XLSX exports, four-card A4 PDF and nine-card A3 PDF.',
 );
 
 if (process.env.LIVE_TEST === '1') {

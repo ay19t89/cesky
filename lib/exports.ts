@@ -180,14 +180,20 @@ async function loadPdfFont(): Promise<string> {
   return btoa(binary);
 }
 
-async function exportPdf(results: Lookup[], filename: string): Promise<void> {
+type PdfSize = 'a4' | 'a3';
+
+async function exportPdf(
+  results: Lookup[],
+  filename: string,
+  size: PdfSize,
+): Promise<void> {
   const [{ jsPDF }, { default: autoTable }, font] = await Promise.all([
     import('jspdf'),
     import('jspdf-autotable'),
     loadPdfFont(),
   ]);
 
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: size });
   pdf.addFileToVFS('NotoSans.ttf', font);
   pdf.addFont('NotoSans.ttf', 'NotoSans', 'normal');
   pdf.setFont('NotoSans');
@@ -197,17 +203,20 @@ async function exportPdf(results: Lookup[], filename: string): Promise<void> {
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 8;
   const gap = 6;
-  const cardWidth = (pageWidth - margin * 2 - gap) / 2;
-  const cardHeight = (pageHeight - margin * 2 - gap) / 2;
+  const columns = size === 'a3' ? 3 : 2;
+  const rows = size === 'a3' ? 3 : 2;
+  const cardsPerPage = columns * rows;
+  const cardWidth = (pageWidth - margin * 2 - gap * (columns - 1)) / columns;
+  const cardHeight = (pageHeight - margin * 2 - gap * (rows - 1)) / rows;
 
   cards.forEach(({ result, entry }, index) => {
     const word = entry?.lemma || result.word;
     const sourceUrl = ijpUrlForWord(word);
-    const position = index % 4;
+    const position = index % cardsPerPage;
     if (index > 0 && position === 0) pdf.addPage();
 
-    const column = position % 2;
-    const row = Math.floor(position / 2);
+    const column = position % columns;
+    const row = Math.floor(position / columns);
     const x = margin + column * (cardWidth + gap);
     const y = margin + row * (cardHeight + gap);
     const contentX = x + 4;
@@ -274,7 +283,7 @@ async function exportPdf(results: Lookup[], filename: string): Promise<void> {
 }
 
 export async function exportData(
-  format: 'csv' | 'xlsx' | 'pdf',
+  format: 'csv' | 'xlsx' | 'pdf-a4' | 'pdf-a3',
   results: Lookup[],
 ): Promise<void> {
   if (!results.length) {
@@ -293,5 +302,6 @@ export async function exportData(
     return;
   }
 
-  await exportPdf(results, filename);
+  const size = format === 'pdf-a3' ? 'a3' : 'a4';
+  await exportPdf(results, `${filename}-${size}`, size);
 }

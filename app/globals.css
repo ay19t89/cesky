@@ -295,21 +295,6 @@ h2 {
   font-size: 13px;
   margin-top: 12px;
 }
-.rodlegend {
-  display: flex;
-  gap: 30px;
-  margin: 22px 0 32px;
-}
-.rodlegend > span {
-  font-weight: 700;
-  color: #2459db;
-}
-.rodlegend small {
-  font-weight: 400;
-  font-size: 14px;
-  color: #52647c;
-  margin-left: 7px;
-}
 .welcome {
   text-align: center;
   padding: 52px 24px;
@@ -355,10 +340,6 @@ h2 {
   .searchbox form > button {
     width: 100%;
   }
-  .rodlegend {
-    gap: 14px;
-    flex-wrap: wrap;
-  }
 }
 .wordcombobox {
   flex: 1;
@@ -373,9 +354,18 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 18px;
+  position: sticky;
+  top: 10px;
+  z-index: 20;
+  margin: -18px -10px 34px;
+  padding: 10px;
   gap: 14px;
   flex-wrap: wrap;
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #f5f8fddd;
+  box-shadow: 0 8px 24px #152e5512;
+  backdrop-filter: blur(12px);
 }
 .viewbar [data-slot='tabs-trigger'] {
   font-size: 15px;
@@ -640,6 +630,45 @@ h2 {
 }
 .resultcard > [data-slot='table-container'] {
   padding: 0 28px;
+}
+.savedrow {
+  cursor: pointer;
+  outline: none;
+  border-bottom-color: transparent;
+}
+.savedrow:hover,
+.savedrow:focus-visible {
+  background: transparent !important;
+}
+.savedrow [data-slot='table-cell'] {
+  padding-top: 13px;
+  padding-bottom: 13px;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+.savedrow:hover [data-slot='table-cell'],
+.savedrow:focus-visible [data-slot='table-cell'] {
+  background: #edf3ff;
+}
+.savedrow:hover [data-slot='table-cell']:first-child,
+.savedrow:focus-visible [data-slot='table-cell']:first-child {
+  border-radius: 10px 0 0 10px;
+}
+.savedrow:hover [data-slot='table-cell']:last-child,
+.savedrow:focus-visible [data-slot='table-cell']:last-child {
+  border-radius: 0 10px 10px 0;
+}
+.savedrow:focus-visible [data-slot='table-cell']:first-child {
+  box-shadow: inset 3px 0 #2459db;
+}
+.rowaction {
+  width: 1%;
+  color: #2459db;
+  text-align: right;
+}
+.rowaction svg {
+  margin-left: auto;
 }
 .emptysaved {
   text-align: center;

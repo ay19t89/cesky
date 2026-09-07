@@ -478,7 +478,18 @@ export default function Home() {
     )
     .sort((left, right) => compareCzechWords(left.word, right.word));
 
-  async function runExport(format: 'csv' | 'xlsx' | 'pdf') {
+  function openSaved(row: Saved) {
+    requestId.current += 1;
+    setBusy(false);
+    setResult(row.result);
+    setCurrentSaved(true);
+    setWord(row.word);
+    setView('lookup');
+    setError('');
+    setMessage('Zobrazen uložený výsledek.');
+  }
+
+  async function runExport(format: 'csv' | 'xlsx' | 'pdf-a4' | 'pdf-a3') {
     setExporting(true);
     setError('');
 
@@ -504,7 +515,14 @@ export default function Home() {
   const exportButtons = (
     <div className="exports">
       <Download size={16} />
-      {(['csv', 'xlsx', 'pdf'] as const).map((format) => (
+      {(
+        [
+          ['csv', 'CSV'],
+          ['xlsx', 'XLSX'],
+          ['pdf-a4', 'PDF A4'],
+          ['pdf-a3', 'PDF A3'],
+        ] as const
+      ).map(([format, label]) => (
         <button
           className="textbutton"
           key={format}
@@ -515,7 +533,7 @@ export default function Home() {
             (view === 'saved' ? !visibleSaved.length : !result)
           }
         >
-          {format.toUpperCase()}
+          {label}
         </button>
       ))}
     </div>
@@ -551,69 +569,6 @@ export default function Home() {
       </header>
 
       <main className="workspace">
-        <div className="eyebrow">SLOVO PO SLOVU</div>
-        <h1>Čeština ve všech pádech.</h1>
-        <p className="intro">
-          Vyhledejte podstatné jméno a uložte si jeho tvary.
-        </p>
-
-        <section className="searchbox">
-          <label htmlFor="word">Které slovo chcete skloňovat?</label>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void check(word).catch(() => {});
-            }}
-          >
-            <Search className="searchicon" />
-            <div className="wordcombobox">
-              <Combobox
-                items={suggestions}
-                filter={null}
-                inputValue={word}
-                onInputValueChange={setWord}
-                onValueChange={(value: string | null) => {
-                  if (value) setWord(value);
-                }}
-              >
-                <ComboboxInput
-                  id="word"
-                  aria-label="Slovo ke skloňování"
-                  placeholder="Například kamarád, žena nebo město"
-                  showTrigger={false}
-                  autoComplete="off"
-                  maxLength={80}
-                />
-                <ComboboxContent>
-                  <ComboboxList>
-                    {(item: string) => (
-                      <ComboboxItem key={item} value={item}>
-                        {item}
-                      </ComboboxItem>
-                    )}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
-            </div>
-            <button type="submit" disabled={busy || !word.trim()}>
-              {busy && <LoaderCircle className="spin" size={18} />}
-              {busy ? 'Ověřuji…' : 'Ověřit slovo'} {!busy && '→'}
-            </button>
-          </form>
-          <small>
-            Návrhy běžných a uložených slov, i bez diakritiky. Po přihlášení
-            také opravy podle příručky.
-          </small>
-        </section>
-
-        <div className="rodlegend">
-          {Object.entries(genders).map(([key, label]) => (
-            <span key={key}>
-              {label.split(' · ')[0]} <small>{label.split(' · ')[1]}</small>
-            </span>
-          ))}
-        </div>
-
         <Tabs value={view} onValueChange={(value) => setView(String(value))}>
           <div className="viewbar">
             <TabsList variant="line">
@@ -627,6 +582,61 @@ export default function Home() {
             </TabsList>
             {exportButtons}
           </div>
+
+          <div className="eyebrow">SLOVO PO SLOVU</div>
+          <h1>Čeština ve všech pádech.</h1>
+          <p className="intro">
+            Vyhledejte podstatné jméno a uložte si jeho tvary.
+          </p>
+
+          <section className="searchbox">
+            <label htmlFor="word">Které slovo chcete skloňovat?</label>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void check(word).catch(() => {});
+              }}
+            >
+              <Search className="searchicon" />
+              <div className="wordcombobox">
+                <Combobox
+                  items={suggestions}
+                  filter={null}
+                  inputValue={word}
+                  onInputValueChange={setWord}
+                  onValueChange={(value: string | null) => {
+                    if (value) setWord(value);
+                  }}
+                >
+                  <ComboboxInput
+                    id="word"
+                    aria-label="Slovo ke skloňování"
+                    placeholder="Například kamarád, žena nebo město"
+                    showTrigger={false}
+                    autoComplete="off"
+                    maxLength={80}
+                  />
+                  <ComboboxContent>
+                    <ComboboxList>
+                      {(item: string) => (
+                        <ComboboxItem key={item} value={item}>
+                          {item}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+              <button type="submit" disabled={busy || !word.trim()}>
+                {busy && <LoaderCircle className="spin" size={18} />}
+                {busy ? 'Ověřuji…' : 'Ověřit slovo'} {!busy && '→'}
+              </button>
+            </form>
+            <small>
+              Návrhy běžných a uložených slov, i bez diakritiky. Po přihlášení
+              také opravy podle příručky.
+            </small>
+          </section>
 
           {error && (
             <p role="alert" className="notice error">
@@ -792,12 +802,25 @@ export default function Home() {
                           <TableHead>Slovo</TableHead>
                           <TableHead>Rod</TableHead>
                           <TableHead>Uloženo</TableHead>
-                          <TableHead>Detail</TableHead>
+                          <TableHead aria-label="Otevřít detail" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {visibleSaved.map((row) => (
-                          <TableRow key={row.id}>
+                          <TableRow
+                            className="savedrow"
+                            key={row.id}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Otevřít ${row.word}`}
+                            onClick={() => openSaved(row)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                openSaved(row);
+                              }
+                            }}
+                          >
                             <TableCell>
                               <strong>{row.word}</strong>
                             </TableCell>
@@ -817,22 +840,8 @@ export default function Home() {
                                 'cs-CZ',
                               )}
                             </TableCell>
-                            <TableCell>
-                              <button
-                                className="textbutton"
-                                onClick={() => {
-                                  requestId.current += 1;
-                                  setBusy(false);
-                                  setResult(row.result);
-                                  setCurrentSaved(true);
-                                  setWord(row.word);
-                                  setView('lookup');
-                                  setError('');
-                                  setMessage('Zobrazen uložený výsledek.');
-                                }}
-                              >
-                                Otevřít →
-                              </button>
+                            <TableCell className="rowaction">
+                              <ArrowUpRight size={17} aria-hidden="true" />
                             </TableCell>
                           </TableRow>
                         ))}
