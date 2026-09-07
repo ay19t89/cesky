@@ -44,6 +44,7 @@ import { compareCzechWords, exportData } from '@/lib/exports';
 import { ijpUrlForWord } from '@/lib/ijp-url';
 import { suggest } from '@/lib/suggestions';
 import { supabase } from '@/lib/supabase';
+import { translationUrl } from '@/lib/translation';
 import {
   caseNames,
   genders,
@@ -164,11 +165,18 @@ function DeclensionTable({ result }: { result: Lookup }) {
 
       <div className="comparison comparison-single">
         <Table>
+          <colgroup>
+            <col className="casecolumn" />
+            <col className="formcolumn" />
+            <col className="formcolumn" />
+            <col className="translationcolumn" />
+          </colgroup>
           <TableHeader>
             <TableRow>
               <TableHead>Pád a otázka</TableHead>
               <TableHead>Jednotné číslo</TableHead>
               <TableHead>Množné číslo</TableHead>
+              <TableHead className="translationhead">Překlad</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -193,6 +201,29 @@ function DeclensionTable({ result }: { result: Lookup }) {
                 <TableCell>
                   <FormCell source={result.ijp} number="plural" index={index} />
                 </TableCell>
+                {index === 0 && (
+                  <TableCell
+                    className="translationcell"
+                    rowSpan={caseNames.length}
+                  >
+                    <div className="translationlinks">
+                      <a
+                        href={translationUrl('anglicky', result.word)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Anglicky <ArrowUpRight size={14} />
+                      </a>
+                      <a
+                        href={translationUrl('rusky', result.word)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Rusky <ArrowUpRight size={14} />
+                      </a>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -378,7 +409,7 @@ export default function Home() {
         } else {
           if (currentRequest === requestId.current) {
             setCurrentSaved(true);
-            setMessage('Slovo bylo automaticky uloženo.');
+            setMessage('Uloženo do slovníku.');
           }
           await refresh();
         }
@@ -444,7 +475,7 @@ export default function Home() {
 
         if (databaseError) throw databaseError;
         setCurrentSaved(false);
-        setMessage('Slovo bylo odebráno ze slovníku.');
+        setMessage('Odebráno ze slovníku.');
       } else {
         const { error: databaseError } = await supabase
           .from('czech_words')
@@ -460,7 +491,7 @@ export default function Home() {
 
         if (databaseError) throw databaseError;
         setCurrentSaved(true);
-        setMessage('Slovo bylo uloženo do slovníku.');
+        setMessage('Uloženo do slovníku.');
       }
 
       await refresh();
@@ -500,7 +531,7 @@ export default function Home() {
     setWord(row.word);
     setView('lookup');
     setError('');
-    setMessage('Zobrazen uložený výsledek.');
+    setMessage('');
   }
 
   useEffect(() => {
@@ -690,12 +721,6 @@ export default function Home() {
               {error}
             </p>
           )}
-          {message && (
-            <p role="status" className="notice success">
-              <Check size={16} /> {message}
-            </p>
-          )}
-
           <TabsContent value="lookup">
             <div aria-live="polite" aria-busy={busy}>
               {result ? (
@@ -728,6 +753,16 @@ export default function Home() {
                       )}
                     </div>
                     <div className="savearea">
+                      <small className="checkedtime">
+                        {new Date(result.checkedAt).toLocaleString('cs-CZ', {
+                          day: 'numeric',
+                          month: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false,
+                        })}
+                      </small>
                       <button
                         onClick={toggleSaved}
                         disabled={
@@ -758,9 +793,11 @@ export default function Home() {
                             ? 'Uloženo'
                             : 'Uložit slovo'}
                       </button>
-                      <small>
-                        {new Date(result.checkedAt).toLocaleString('cs-CZ')}
-                      </small>
+                      {message && (
+                        <small role="status" className="savehint">
+                          <Check size={13} /> {message}
+                        </small>
+                      )}
                     </div>
                   </div>
                   <DeclensionTable result={result} />

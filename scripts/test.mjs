@@ -11,6 +11,7 @@ for (const name of [
   'dictionary',
   'handler',
   'suggestions',
+  'translation',
   'exports',
 ]) {
   const source = await readFile(`lib/${name}.ts`, 'utf8');
@@ -28,8 +29,18 @@ const { parseIjp, validateWord, lookup } =
   await import('../.test-build/dictionary.mjs');
 const { handleDictionary } = await import('../.test-build/handler.mjs');
 const { suggest } = await import('../.test-build/suggestions.mjs');
+const { translationUrl } = await import('../.test-build/translation.mjs');
 const { headers, compareCzechWords, csvText, exportRows, exportData } =
   await import('../.test-build/exports.mjs');
+
+assert.equal(
+  translationUrl('anglicky', 'moře'),
+  'https://slovnik.seznam.cz/preklad/cesky_anglicky/mo%C5%99e',
+);
+assert.equal(
+  translationUrl('rusky', 'pes'),
+  'https://slovnik.seznam.cz/preklad/cesky_rusky/pes',
+);
 
 const caseRows = Array.from(
   { length: 7 },
