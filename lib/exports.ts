@@ -49,14 +49,34 @@ export function exportRows(results: Lookup[]): string[][] {
   });
 }
 
-function csvCell(value: string): string {
-  const safeValue = /^[=+@\-\t\r]/.test(value) ? `'${value}` : value;
+function csvCell(value: string, allowFormula = false): string {
+  const safeValue =
+    !allowFormula && /^[=+@\-\t\r]/.test(value) ? `'${value}` : value;
   return `"${safeValue.replaceAll('"', '""')}"`;
+}
+
+function csvHyperlink(url: string): string {
+  if (!url.startsWith('https://prirucka.ujc.cas.cz/')) return url;
+  const formulaUrl = url.replaceAll('"', '""');
+  return `=HYPERLINK("${formulaUrl}","${formulaUrl}")`;
 }
 
 export function csvText(results: Lookup[]): string {
   const rows = [headers, ...exportRows(results)];
-  return `\ufeff${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
+  return `\ufeff${rows
+    .map((row, rowIndex) =>
+      row
+        .map((value, columnIndex) =>
+          csvCell(
+            rowIndex > 0 && columnIndex === headers.length - 1
+              ? csvHyperlink(value)
+              : value,
+            rowIndex > 0 && columnIndex === headers.length - 1,
+          ),
+        )
+        .join(','),
+    )
+    .join('\r\n')}`;
 }
 
 function download(data: BlobPart, type: string, name: string): void {
@@ -102,6 +122,16 @@ async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
     const row = sheet.getRow(index + 2);
     row.height = 24;
     row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+
+    const linkCell = row.getCell(headers.length);
+    const link = rows[index][headers.length - 1];
+    if (link.startsWith('https://prirucka.ujc.cas.cz/')) {
+      linkCell.value = {
+        text: link,
+        hyperlink: link,
+      };
+      linkCell.font = { color: { argb: 'FF0563C1' }, underline: true };
+    }
 
     if (Math.floor(index / 2) % 2 === 1) {
       row.eachCell((cell) => {

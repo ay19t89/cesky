@@ -149,6 +149,11 @@ const csv = csvText([fixture]);
 assert.ok(csv.startsWith('\ufeff"Rod","Slovo","Číslo"'));
 assert.ok(!csv.includes('Stav zdroje'));
 assert.ok(!csv.includes('Ověřeno'));
+assert.ok(
+  csv.includes(
+    '"=HYPERLINK(""https://prirucka.ujc.cas.cz/?slovo=%C5%BEena"",""https://prirucka.ujc.cas.cz/?slovo=%C5%BEena"")"',
+  ),
+);
 await writeFile('.test-build/export-layout.csv', csv);
 
 const formulaFixture = {
@@ -184,7 +189,10 @@ await workbook.xlsx.load(xlsxBuffer);
 assert.equal(workbook.worksheets[0].getCell('F2').value, 'ženě');
 assert.equal(workbook.worksheets[0].getCell('C2').value, 'Jednotné');
 assert.equal(workbook.worksheets[0].getCell('C3').value, 'Množné');
-assert.equal(workbook.worksheets[0].getCell('K2').value, fixture.ijp.url);
+assert.deepEqual(workbook.worksheets[0].getCell('K2').value, {
+  text: fixture.ijp.url,
+  hyperlink: fixture.ijp.url,
+});
 
 globalThis.fetch = async (url) => {
   assert.equal(
