@@ -100,7 +100,7 @@ async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
   const rows = exportRows(results);
   sheet.addRows([headers, ...rows]);
 
-  const widths = [20, 22, 14, 18, 18, 18, 18, 18, 18, 18, 52];
+  const widths = [16, 18, 11, 18, 18, 18, 18, 18, 18, 18, 48];
   sheet.columns.forEach((column, index) => {
     column.width = widths[index];
     column.alignment = {
@@ -111,12 +111,12 @@ async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
 
   const header = sheet.getRow(1);
   header.height = 24;
-  header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  header.font = { bold: true, color: { argb: 'FF174C3A' } };
   header.alignment = { horizontal: 'center', vertical: 'middle' };
   header.fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FF2459DB' },
+    fgColor: { argb: 'FFD9EFE5' },
   };
 
   rows.forEach((_, index) => {
@@ -196,6 +196,7 @@ async function exportPdf(
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: size });
   pdf.addFileToVFS('NotoSans.ttf', font);
   pdf.addFont('NotoSans.ttf', 'NotoSans', 'normal');
+  pdf.addFont('NotoSans.ttf', 'NotoSans', 'bold');
   pdf.setFont('NotoSans');
 
   const cards = entriesForExport(results);
@@ -204,7 +205,7 @@ async function exportPdf(
   const margin = 8;
   const gap = 6;
   const columns = size === 'a3' ? 3 : 2;
-  const rows = size === 'a3' ? 3 : 2;
+  const rows = size === 'a3' ? 4 : 3;
   const cardsPerPage = columns * rows;
   const cardWidth = (pageWidth - margin * 2 - gap * (columns - 1)) / columns;
   const cardHeight = (pageHeight - margin * 2 - gap * (rows - 1)) / rows;
@@ -258,9 +259,9 @@ async function exportPdf(
           valign: 'middle',
         },
         headStyles: {
-          fontStyle: 'normal',
-          fillColor: [36, 89, 219],
-          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fillColor: [217, 239, 229],
+          textColor: [23, 76, 58],
         },
         alternateRowStyles: { fillColor: [247, 249, 252] },
         columnStyles: {

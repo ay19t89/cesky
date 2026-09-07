@@ -239,6 +239,14 @@ assert.deepEqual(workbook.worksheets[0].getCell('K2').value, {
   text: fixture.ijp.url,
   hyperlink: fixture.ijp.url,
 });
+assert.equal(workbook.worksheets[0].getColumn(1).width, 16);
+assert.equal(workbook.worksheets[0].getColumn(2).width, 18);
+assert.equal(workbook.worksheets[0].getColumn(3).width, 11);
+assert.equal(
+  workbook.worksheets[0].getCell('A1').fill.fgColor.argb,
+  'FFD9EFE5',
+);
+assert.equal(workbook.worksheets[0].getCell('A1').font.bold, true);
 
 globalThis.fetch = async (url) => {
   assert.equal(
@@ -247,7 +255,7 @@ globalThis.fetch = async (url) => {
   );
   return new Response(await readFile('public/fonts/NotoSans-Regular.ttf'));
 };
-const pdfFixtures = [
+const basePdfFixtures = [
   ['žena', 'F'],
   ['pes', 'M'],
   ['hrad', 'I'],
@@ -267,6 +275,17 @@ const pdfFixtures = [
   },
 }));
 
+const pdfFixtures = Array.from({ length: 6 }, (_, index) => ({
+  ...basePdfFixtures[index % basePdfFixtures.length],
+  word: `slovo-a4-${index + 1}`,
+  ijp: {
+    ...basePdfFixtures[index % basePdfFixtures.length].ijp,
+    entries: basePdfFixtures[index % basePdfFixtures.length].ijp.entries.map(
+      (entry) => ({ ...entry, lemma: `slovo-a4-${index + 1}` }),
+    ),
+  },
+}));
+
 await exportData('pdf-a4', pdfFixtures);
 const pdfA4 = Buffer.from(await downloaded.arrayBuffer());
 assert.equal(pdfA4.subarray(0, 5).toString(), '%PDF-');
@@ -275,12 +294,12 @@ assert.ok(pdfA4.includes(Buffer.from('/MediaBox [0 0 595.')));
 assert.equal(pdfA4.toString('latin1').match(/\/Type \/Page\b/g)?.length, 1);
 await writeFile('.test-build/export-layout-a4.pdf', pdfA4);
 
-const pdfA3Fixtures = Array.from({ length: 9 }, (_, index) => ({
-  ...pdfFixtures[index % pdfFixtures.length],
+const pdfA3Fixtures = Array.from({ length: 12 }, (_, index) => ({
+  ...basePdfFixtures[index % basePdfFixtures.length],
   word: `slovo${index + 1}`,
   ijp: {
-    ...pdfFixtures[index % pdfFixtures.length].ijp,
-    entries: pdfFixtures[index % pdfFixtures.length].ijp.entries.map(
+    ...basePdfFixtures[index % basePdfFixtures.length].ijp,
+    entries: basePdfFixtures[index % basePdfFixtures.length].ijp.entries.map(
       (entry) => ({ ...entry, lemma: `slovo${index + 1}` }),
     ),
   },
@@ -299,7 +318,7 @@ URL.revokeObjectURL = originalRevokeObjectUrl;
 delete globalThis.document;
 
 console.log(
-  'PASS: IJP parsing, four genders, seven cases, footnotes, plural-only nouns, input validation, suggestions, auth rejection, transposed CSV/XLSX exports, four-card A4 PDF and nine-card A3 PDF.',
+  'PASS: IJP parsing, four genders, seven cases, footnotes, plural-only nouns, input validation, suggestions, auth rejection, transposed CSV/XLSX exports, six-card A4 PDF and twelve-card A3 PDF.',
 );
 
 if (process.env.LIVE_TEST === '1') {

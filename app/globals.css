@@ -361,11 +361,24 @@ h2 {
   padding: 10px;
   gap: 14px;
   flex-wrap: wrap;
-  border: 1px solid #dbe3ee;
+  border: 1px solid #c9d6e8;
   border-radius: 12px;
-  background: #f5f8fddd;
-  box-shadow: 0 8px 24px #152e5512;
-  backdrop-filter: blur(12px);
+  background: #f7fafffa;
+  box-shadow:
+    0 12px 34px #17375f26,
+    0 3px 10px #17375f14;
+  backdrop-filter: blur(16px);
+}
+.viewbar::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: -1px;
+  right: -1px;
+  top: -18px;
+  height: 18px;
+  background: linear-gradient(to bottom, #f4f7fcb8, #f4f7fcf2);
+  pointer-events: none;
 }
 .viewbar [data-slot='tabs-trigger'] {
   font-size: 15px;
