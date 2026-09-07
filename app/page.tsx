@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
+  ArrowRight,
   ArrowUpRight,
   BookOpen,
   Bookmark,
@@ -479,6 +480,19 @@ export default function Home() {
     .sort((left, right) => compareCzechWords(left.word, right.word));
 
   function openSaved(row: Saved) {
+    const currentUrl = new URL(window.location.href);
+    window.history.replaceState({ view: 'saved' }, '', currentUrl);
+    currentUrl.searchParams.set('slovo', row.word);
+    window.history.pushState(
+      { view: 'lookup', word: row.word },
+      '',
+      currentUrl,
+    );
+
+    showSaved(row);
+  }
+
+  function showSaved(row: Saved) {
     requestId.current += 1;
     setBusy(false);
     setResult(row.result);
@@ -488,6 +502,38 @@ export default function Home() {
     setError('');
     setMessage('Zobrazen uložený výsledek.');
   }
+
+  useEffect(() => {
+    function restoreHistory(event: PopStateEvent) {
+      const wordFromUrl = new URL(window.location.href).searchParams.get(
+        'slovo',
+      );
+      const matchingRow = wordFromUrl
+        ? saved.find((row) => row.word === wordFromUrl)
+        : undefined;
+
+      if (matchingRow) {
+        showSaved(matchingRow);
+        return;
+      }
+
+      setView(event.state?.view === 'saved' ? 'saved' : 'lookup');
+      setMessage('');
+    }
+
+    window.addEventListener('popstate', restoreHistory);
+    return () => window.removeEventListener('popstate', restoreHistory);
+  }, [saved]);
+
+  useEffect(() => {
+    const wordFromUrl = new URL(window.location.href).searchParams.get('slovo');
+    const matchingRow = wordFromUrl
+      ? saved.find((row) => row.word === wordFromUrl)
+      : undefined;
+    if (matchingRow && result?.word !== matchingRow.word) {
+      showSaved(matchingRow);
+    }
+  }, [saved]);
 
   async function runExport(format: 'csv' | 'xlsx' | 'pdf-a4' | 'pdf-a3') {
     setExporting(true);
@@ -629,7 +675,8 @@ export default function Home() {
               </div>
               <button type="submit" disabled={busy || !word.trim()}>
                 {busy && <LoaderCircle className="spin" size={18} />}
-                {busy ? 'Ověřuji…' : 'Ověřit slovo'} {!busy && '→'}
+                {busy ? 'Ověřuji…' : 'Ověřit slovo'}
+                {!busy && <ArrowRight size={18} aria-hidden="true" />}
               </button>
             </form>
             <small>

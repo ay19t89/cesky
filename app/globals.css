@@ -252,10 +252,10 @@ input:focus-visible {
   font-weight: 700;
 }
 h1 {
-  font-size: 42px;
-  letter-spacing: -1.8px;
+  font-size: 38px;
+  letter-spacing: -1.5px;
   line-height: 1.2;
-  margin: 12px 0;
+  margin: 9px 0 4px;
 }
 h2 {
   font-size: 23px;
@@ -263,7 +263,7 @@ h2 {
 }
 .intro {
   color: #52647c;
-  margin: 16px 0 30px;
+  margin: 8px 0 24px;
 }
 .searchbox {
   background: #fff;
@@ -329,7 +329,7 @@ h2 {
     padding: 30px 18px;
   }
   h1 {
-    font-size: 32px;
+    font-size: 30px;
   }
   .searchbox {
     padding: 17px;
@@ -357,7 +357,7 @@ h2 {
   position: sticky;
   top: 10px;
   z-index: 20;
-  margin: -18px -10px 34px;
+  margin: -18px -10px 26px;
   padding: 10px;
   gap: 14px;
   flex-wrap: wrap;
@@ -374,6 +374,7 @@ h2 {
 .count {
   font-size: 12px;
   background: #e6edf8;
+  color: #183452;
   padding: 1px 7px;
   border-radius: 20px;
   margin-left: 4px;
@@ -627,6 +628,14 @@ h2 {
 }
 .genderfilters [data-slot='tabs-trigger'] {
   padding: 7px 12px;
+}
+@media (min-width: 850px) {
+  .genderfilters {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: calc(100% - 56px);
+    max-width: none;
+  }
 }
 .resultcard > [data-slot='table-container'] {
   padding: 0 28px;
