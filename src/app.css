@@ -23,14 +23,12 @@
   }
 
   button,
-  input,
-  select {
+  input {
     font: inherit;
   }
 
   button:focus-visible,
   input:focus-visible,
-  select:focus-visible,
   tr:focus-visible {
     outline: 3px solid #80a8ff;
     outline-offset: 2px;
@@ -79,10 +77,6 @@
     @apply bg-[#fff0ef] text-[#a23232];
   }
 
-  .select {
-    @apply cursor-pointer rounded-md border border-[#cbd8e8] bg-white py-[3px] pr-[22px] pl-[7px] font-bold text-[#24415f];
-  }
-
   .data-table {
     @apply w-full border-collapse;
   }
@@ -128,10 +122,6 @@
 
   .saved-table td:nth-child(4) {
     @apply max-w-[240px];
-  }
-
-  .saved-table th label {
-    @apply inline-flex items-center justify-center gap-[7px];
   }
 }
 

@@ -16,9 +16,7 @@
     type Gender,
     type Lookup,
     type Saved,
-    type Source,
-    type TranslationLanguage,
-    type Translations
+    type Source
   } from '$lib/types';
 
   type ApiResponse = Lookup & {
@@ -49,10 +47,8 @@
   let exporting = $state(false);
   let view = $state<'lookup' | 'saved'>('lookup');
   let gender = $state<'all' | Gender>('all');
-  let translationLanguage = $state<TranslationLanguage>('rusky');
   let requestId = $state(0);
   let suggestionTimer = $state<ReturnType<typeof setTimeout> | undefined>();
-  const translationLoads = new Set<string>();
 
   const visibleSaved = $derived.by(() =>
     saved
@@ -91,12 +87,6 @@
       throw new Error(json.error || json.message || 'Ověření se nezdařilo.');
     }
     return json;
-  }
-
-  async function translationRequest(value: string): Promise<Translations> {
-    const data = await dictionaryRequest(value, 'translations');
-    if (!data.translations) throw new Error('Překlad se nepodařilo načíst.');
-    return data.translations;
   }
 
   function updateSuggestions(): void {
@@ -139,7 +129,6 @@
       }
       if (session?.user.id === userId) {
         saved = rows;
-        void hydrateTranslations(rows, userId);
       }
     } catch {
       savedError =
@@ -147,41 +136,6 @@
     } finally {
       savedBusy = false;
     }
-  }
-
-  async function hydrateTranslations(
-    rows: Saved[],
-    userId: string
-  ): Promise<void> {
-    const queue = rows.filter(
-      (row) => !row.result.translations && !translationLoads.has(row.id)
-    );
-
-    async function worker(): Promise<void> {
-      while (queue.length && session?.user.id === userId) {
-        const row = queue.shift();
-        if (!row) return;
-        translationLoads.add(row.id);
-        try {
-          const translations = await translationRequest(row.word);
-          const enrichedResult = { ...row.result, translations };
-          const response = await supabase
-            .from('czech_words')
-            .update({ result: enrichedResult, updated_at: row.updated_at })
-            .eq('id', row.id)
-            .eq('user_id', userId);
-          if (response.error) throw response.error;
-          saved = saved.map((item) =>
-            item.id === row.id ? { ...item, result: enrichedResult } : item
-          );
-          if (result?.word === row.word) result = enrichedResult;
-        } catch {
-          // Translation links remain available when a preview cannot be loaded.
-        }
-      }
-    }
-
-    await Promise.all([worker(), worker(), worker()]);
   }
 
   async function check(value = word): Promise<Lookup> {
@@ -360,29 +314,6 @@
       .join(' · ');
   }
 
-  function translationText(item: Lookup, compact = false): string {
-    const source = item.translations?.[translationLanguage];
-    if (!source?.senses.length) return source?.message || 'Otevřít překlad';
-    const first = source.senses[0];
-    const text =
-      first.translations.join(', ') ||
-      first.phrases[0]?.target ||
-      'Otevřít překlad';
-    return compact
-      ? text
-      : source.senses
-          .map((sense) => sense.translations.join(', '))
-          .filter(Boolean)
-          .join('; ');
-  }
-
-  function translationHref(item: Lookup): string {
-    return (
-      item.translations?.[translationLanguage]?.url ||
-      translationUrl(translationLanguage, item.word)
-    );
-  }
-
   function checkedAt(value: string): string {
     return new Date(value).toLocaleString('cs-CZ', {
       day: 'numeric',
@@ -409,7 +340,6 @@
       session = nextSession;
       authReady = true;
       if (changed) {
-        translationLoads.clear();
         result = null;
         currentSaved = false;
         saved = [];
@@ -831,16 +761,7 @@
             <thead
               ><tr
                 ><th>Slovo</th><th>Rod</th><th>Uloženo</th><th
-                  ><label
-                    >Překlad <select
-                      class="select"
-                      bind:value={translationLanguage}
-                      aria-label="Jazyk překladu"
-                      ><option value="rusky">RU</option><option value="anglicky"
-                        >EN</option
-                      ></select
-                    ></label
-                  ></th
+                  class="text-center">Překlad</th
                 ><th aria-label="Otevřít detail"></th></tr
               ></thead
             >
@@ -865,17 +786,28 @@
                   >
                   <td>{new Date(row.updated_at).toLocaleDateString('cs-CZ')}</td
                   >
-                  <td
-                    ><a
-                      href={translationHref(row.result)}
-                      target="_blank"
-                      rel="noreferrer"
-                      class="inline-flex items-center gap-[5px] font-bold no-underline"
-                      onclick={(event) => event.stopPropagation()}
-                      >{translationText(row.result, true)}
-                      <Icon name="arrow-up-right" size={12} /></a
-                    ></td
-                  >
+                  <td>
+                    <div
+                      class="flex items-center justify-center gap-4 whitespace-nowrap"
+                    >
+                      <a
+                        href={translationUrl('anglicky', row.word)}
+                        target="_blank"
+                        rel="noreferrer"
+                        class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                        onclick={(event) => event.stopPropagation()}
+                        >Anglický <Icon name="arrow-up-right" size={12} /></a
+                      >
+                      <a
+                        href={translationUrl('rusky', row.word)}
+                        target="_blank"
+                        rel="noreferrer"
+                        class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                        onclick={(event) => event.stopPropagation()}
+                        >Ruský <Icon name="arrow-up-right" size={12} /></a
+                      >
+                    </div>
+                  </td>
                   <td class="w-[1%] text-right text-[#2459db]"
                     ><Icon name="arrow-up-right" size={17} /></td
                   >
