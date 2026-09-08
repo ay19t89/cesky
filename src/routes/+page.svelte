@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { pushState, replaceState } from '$app/navigation';
   import type { Session } from '@supabase/supabase-js';
   import AppHeader from '$lib/components/AppHeader.svelte';
   import LoginDialog from '$lib/components/LoginDialog.svelte';
@@ -257,14 +258,21 @@
 
   function openSaved(row: Saved): void {
     const currentUrl = new URL(window.location.href);
-    window.history.replaceState({ view: 'saved' }, '', currentUrl);
+    replaceState(currentUrl, { view: 'saved' });
     currentUrl.searchParams.set('slovo', row.word);
-    window.history.pushState(
-      { view: 'lookup', word: row.word },
-      '',
-      currentUrl
-    );
+    pushState(currentUrl, { view: 'lookup', word: row.word });
     showSaved(row);
+  }
+
+  function selectView(nextView: View): void {
+    if (nextView === 'saved') {
+      const currentUrl = new URL(window.location.href);
+      if (currentUrl.searchParams.has('slovo')) {
+        currentUrl.searchParams.delete('slovo');
+        pushState(currentUrl, { view: 'saved' });
+      }
+    }
+    view = nextView;
   }
 
   function restoreHistory(state?: { view?: string }): void {
@@ -358,7 +366,7 @@
     exportDisabled={exporting ||
       busy ||
       (view === 'saved' ? !visibleSaved.length : !result)}
-    onView={(nextView) => (view = nextView)}
+    onView={selectView}
     onExport={(format) => void runExport(format)}
   />
 

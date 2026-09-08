@@ -27,7 +27,7 @@
 </script>
 
 <nav
-  class="sticky top-3 z-20 -mx-2.5 -mt-[18px] mb-[34px] flex flex-wrap items-center justify-between gap-3.5 rounded-xl border border-[#cbd8e8] bg-[#f7faff]/95 p-2.5 shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)] ring-1 ring-white/80 backdrop-blur-xl"
+  class="sticky top-3 z-20 mx-auto -mt-[18px] mb-[34px] flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3.5 rounded-xl border border-[#cbd8e8] bg-[#f7faff]/95 p-2.5 shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)] ring-1 ring-white/80 backdrop-blur-xl max-[700px]:-mx-2.5 max-[700px]:w-auto"
   aria-label="Hlavní pohledy a export"
 >
   <div class="flex items-center gap-[7px]">
