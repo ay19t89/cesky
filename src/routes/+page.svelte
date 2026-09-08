@@ -36,6 +36,7 @@
   let authBusy = $state(false);
   let word = $state('');
   let suggestions = $state<string[]>([]);
+  let suggestionsOpen = $state(false);
   let result = $state<Lookup | null>(null);
   let busy = $state(false);
   let error = $state('');
@@ -332,10 +333,14 @@
     exporting = true;
     savedError = '';
     try {
-      await exportData(
-        format,
-        visibleSaved.map((row) => row.result)
-      );
+      const rows =
+        view === 'saved'
+          ? visibleSaved.map((row) => row.result)
+          : result
+            ? [result]
+            : [];
+      if (!rows.length) return;
+      await exportData(format, rows);
     } catch (cause) {
       savedError =
         cause instanceof Error ? cause.message : 'Export se nezdařil.';
@@ -466,7 +471,7 @@
 </header>
 
 <main
-  class="mx-auto max-w-[1440px] px-7 pt-12 pb-16 max-[700px]:px-[18px] max-[700px]:pt-[30px] max-[700px]:pb-[55px]"
+  class="mx-auto max-w-[1200px] px-7 pt-12 pb-16 max-[700px]:px-[18px] max-[700px]:pt-[30px] max-[700px]:pb-[55px]"
 >
   <nav
     class="sticky top-3 z-20 -mx-2.5 -mt-[18px] mb-[34px] flex flex-wrap items-center justify-between gap-3.5 rounded-xl border border-[#cbd8e8] bg-[#f7faff]/95 p-2.5 shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)] ring-1 ring-white/80 backdrop-blur-xl"
@@ -501,7 +506,9 @@
         <button
           class="btn bg-transparent px-[9px] py-1.5 text-[13px] text-[#2459db]"
           type="button"
-          disabled={exporting || !visibleSaved.length}
+          disabled={exporting ||
+            busy ||
+            (view === 'saved' ? !visibleSaved.length : !result)}
           onclick={() =>
             runExport(option[0] as 'csv' | 'xlsx' | 'pdf-a4' | 'pdf-a3')}
           >{option[1]}</button
@@ -531,21 +538,46 @@
         void check().catch(() => {});
       }}
     >
-      <Icon name="search" size={25} />
-      <input
-        class="min-w-[100px] flex-1 rounded-[7px] border-0 bg-white px-2 py-[11px] text-xl text-[#182c47]"
-        id="word"
-        bind:value={word}
-        oninput={updateSuggestions}
-        list="word-suggestions"
-        maxlength="80"
-        autocomplete="off"
-        placeholder="Například kamarád, žena nebo město"
-      />
-      <datalist id="word-suggestions">
-        {#each suggestions as suggestion}<option value={suggestion}
-          ></option>{/each}
-      </datalist>
+      <span class="max-[700px]:hidden"><Icon name="search" size={25} /></span>
+      <div class="relative min-w-[100px] flex-1">
+        <input
+          class="w-full rounded-[7px] border-0 bg-white px-2 py-[11px] text-xl text-[#182c47]"
+          id="word"
+          bind:value={word}
+          onfocus={() => (suggestionsOpen = true)}
+          oninput={() => {
+            suggestionsOpen = true;
+            updateSuggestions();
+          }}
+          onblur={() => setTimeout(() => (suggestionsOpen = false), 120)}
+          maxlength="80"
+          autocomplete="off"
+          placeholder="Například kamarád, žena nebo město"
+          aria-autocomplete="list"
+          aria-controls="word-suggestions"
+          aria-expanded={suggestionsOpen && suggestions.length > 0}
+        />
+        {#if suggestionsOpen && suggestions.length}
+          <div
+            id="word-suggestions"
+            role="listbox"
+            class="absolute top-full right-0 left-0 z-30 mt-2 overflow-hidden rounded-lg border border-[#dbe3ee] bg-white p-1.5 shadow-[0_12px_32px_rgba(23,55,95,0.16)]"
+          >
+            {#each suggestions as suggestion}
+              <button
+                class="block w-full cursor-pointer rounded-md bg-transparent px-3 py-2 text-left text-[15px] text-[#24415f] hover:bg-[#edf3ff]"
+                type="button"
+                role="option"
+                aria-selected={word === suggestion}
+                onclick={() => {
+                  word = suggestion;
+                  suggestionsOpen = false;
+                }}>{suggestion}</button
+              >
+            {/each}
+          </div>
+        {/if}
+      </div>
       <button
         class="btn max-[700px]:w-full"
         type="submit"
@@ -657,7 +689,7 @@
 
         <div class="overflow-x-auto">
           <table
-            class="data-table min-w-[800px] table-fixed text-[15px] [&_td:nth-child(2)]:border-l [&_td:nth-child(2)]:border-[#e6ecf4]"
+            class="data-table min-w-[850px] table-fixed text-[15px] [&_td:nth-child(2)]:border-l [&_td:nth-child(2)]:border-[#e6ecf4]"
           >
             <colgroup
               ><col class="w-[24%]" /><col class="w-[28%]" /><col
@@ -738,7 +770,7 @@
     {/if}
   {:else}
     <section class="panel mt-[22px] overflow-hidden">
-      <div class="flex items-center justify-between px-7 pt-[22px]">
+      <div class="flex items-center justify-between px-7 pt-5">
         <div>
           <h2 class="text-[23px] tracking-[-0.5px]">Můj slovník</h2>
           <p class="mt-1.5 mb-0 text-[13px] text-[#64758c]">
@@ -893,7 +925,9 @@
         aria-label="Zavřít"
         onclick={() => (loginOpen = false)}>×</button
       >
-      <h2 id="login-title">Přihlášení do slovníku</h2>
+      <h2 id="login-title" class="text-[23px] tracking-[-0.5px]">
+        Přihlášení do slovníku
+      </h2>
       <p class="text-[#64758c]">Každý účet vidí pouze vlastní uložená slova.</p>
       <form class="flex flex-col gap-2.5" onsubmit={signIn}>
         <label class="text-sm font-bold" for="email">E-mail</label><input

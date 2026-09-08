@@ -31,8 +31,10 @@
   {#if name === 'search'}
     <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
   {:else if name === 'book'}
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path
-      d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"
+    <path d="M12 7v14" /><path
+      d="M3 18a1 1 0 0 1-1-1V5a2 2 0 0 1 2-2h5a3 3 0 0 1 3 3v15a3 3 0 0 0-3-3Z"
+    /><path
+      d="M21 18a1 1 0 0 0 1-1V5a2 2 0 0 0-2-2h-5a3 3 0 0 0-3 3v15a3 3 0 0 1 3-3Z"
     />
   {:else if name === 'bookmark'}
     <path d="M6 3h12v18l-6-4-6 4V3Z" />
