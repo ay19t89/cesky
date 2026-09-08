@@ -39,4 +39,5 @@ next-env.d.ts
 
 /dist-pages/
 /.test-build/
+/.openai/
 *.tsbuildinfo
