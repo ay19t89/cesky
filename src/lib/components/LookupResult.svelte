@@ -24,7 +24,7 @@
   } = $props();
 </script>
 
-<section class="panel mt-[22px] overflow-hidden" aria-busy={busy}>
+<section class="panel mt-7 overflow-hidden" aria-busy={busy}>
   <div
     class="flex justify-between gap-5 px-7 pt-7 pb-6 max-[700px]:flex-wrap max-[700px]:px-[18px] max-[700px]:pt-5"
   >

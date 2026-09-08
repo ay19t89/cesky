@@ -32,7 +32,7 @@
   ];
 </script>
 
-<section class="panel mt-[22px] overflow-hidden">
+<section class="panel mt-7 overflow-hidden">
   <div class="flex items-center justify-between px-7 pt-5">
     <div>
       <h2 class="text-[23px] tracking-[-0.5px]">Můj slovník</h2>

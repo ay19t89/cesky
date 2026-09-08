@@ -32,14 +32,18 @@
 >
   <div class="flex items-center gap-[7px]">
     <button
-      class="tab {view === 'lookup' ? 'shadow-[inset_0_-3px_#182c47]' : ''}"
+      class="tab {view === 'lookup'
+        ? 'after:absolute after:-bottom-[5px] after:left-2 after:right-2 after:h-[3px] after:rounded-full after:bg-[#49cdb1]'
+        : ''}"
       type="button"
       onclick={() => onView('lookup')}
     >
       <Icon name="search" size={16} /> Ověření slova
     </button>
     <button
-      class="tab {view === 'saved' ? 'shadow-[inset_0_-3px_#182c47]' : ''}"
+      class="tab {view === 'saved'
+        ? 'after:absolute after:-bottom-[5px] after:left-2 after:right-2 after:h-[3px] after:rounded-full after:bg-[#49cdb1]'
+        : ''}"
       type="button"
       onclick={() => onView('saved')}
     >

@@ -58,7 +58,7 @@
   }
 
   .tab {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#2459db] px-3.5 py-2.5 text-[15px] font-bold text-white;
+    @apply relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#2459db] px-3 py-1.5 text-sm font-bold text-white;
   }
 
   .panel {
