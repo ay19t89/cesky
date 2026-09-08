@@ -49,9 +49,8 @@
   {:else if name === 'download'}
     <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" />
   {:else if name === 'refresh'}
-    <path d="M20 6v6h-6" /><path d="M4 18v-6h6" /><path
-      d="M18.5 9A7 7 0 0 0 6 6.5L4 12"
-    /><path d="M5.5 15A7 7 0 0 0 18 17.5l2-5.5" />
+    <path d="M21 12a9 9 0 0 0-15.66-6.06L3 8" /><path d="M3 3v5h5" />
+    <path d="M3 12a9 9 0 0 0 15.66 6.06L21 16" /><path d="M16 16h5v5" />
   {:else if name === 'arrow-right'}
     <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
   {:else if name === 'arrow-up-right'}

@@ -1,7 +1,8 @@
 import { sites } from '@openai/sites-vite-plugin';
 import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [sveltekit(), sites()]
+  plugins: [tailwindcss(), sveltekit(), sites()]
 });

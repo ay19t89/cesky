@@ -427,15 +427,24 @@
   <title>České pády</title>
 </svelte:head>
 
-<header class="topbar">
-  <a class="brand" href="/" aria-label="České pády – úvod">
+<header
+  class="flex items-center justify-between border-b border-[#dbe3ee] bg-white px-[5vw] py-[22px]"
+>
+  <a
+    class="flex items-center gap-3 text-[23px] tracking-[-0.6px] text-[#182c47] no-underline [&>svg]:text-[#2459db]"
+    href="/"
+    aria-label="České pády – úvod"
+  >
     <Icon name="book" size={24} />
     <b>české pády</b>
-    <span>OSOBNÍ SLOVNÍK</span>
+    <span
+      class="ml-3.5 border-l border-[#dbe3ee] pl-[22px] text-xs font-bold tracking-[1.6px] text-[#6a7a91] max-[700px]:hidden"
+      >OSOBNÍ SLOVNÍK</span
+    >
   </a>
   {#if session}
     <button
-      class="secondary"
+      class="btn btn-secondary"
       type="button"
       onclick={async () => {
         const response = await supabase.auth.signOut();
@@ -446,7 +455,7 @@
     </button>
   {:else}
     <button
-      class="secondary"
+      class="btn btn-secondary"
       type="button"
       disabled={!authReady}
       onclick={() => (loginOpen = true)}
@@ -456,30 +465,41 @@
   {/if}
 </header>
 
-<main class="workspace">
-  <nav class="viewbar" aria-label="Hlavní pohledy a export">
-    <div class="tabs">
+<main
+  class="mx-auto max-w-[1440px] px-7 pt-12 pb-16 max-[700px]:px-[18px] max-[700px]:pt-[30px] max-[700px]:pb-[55px]"
+>
+  <nav
+    class="sticky top-3 z-20 -mx-2.5 -mt-[18px] mb-[34px] flex flex-wrap items-center justify-between gap-3.5 rounded-xl border border-[#cbd8e8] bg-[#f7faff]/95 p-2.5 shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)] ring-1 ring-white/80 backdrop-blur-xl"
+    aria-label="Hlavní pohledy a export"
+  >
+    <div class="flex items-center gap-[7px]">
       <button
-        class:active={view === 'lookup'}
+        class="tab {view === 'lookup' ? 'shadow-[inset_0_-3px_#182c47]' : ''}"
         type="button"
         onclick={() => (view = 'lookup')}
       >
         <Icon name="search" size={16} /> Ověření slova
       </button>
       <button
-        class:active={view === 'saved'}
+        class="tab {view === 'saved' ? 'shadow-[inset_0_-3px_#182c47]' : ''}"
         type="button"
         onclick={() => (view = 'saved')}
       >
         <Icon name="bookmark" size={16} /> Můj slovník
-        <span class="count">{saved.length}</span>
+        <span
+          class="ml-[3px] rounded-full bg-[#e6edf8] px-[7px] py-px text-xs text-[#183452]"
+          >{saved.length}</span
+        >
       </button>
     </div>
-    <div class="exports" aria-label="Export slovníku">
+    <div
+      class="flex items-center gap-[7px] text-[#637791] max-[700px]:ml-auto max-[700px]:flex-wrap"
+      aria-label="Export slovníku"
+    >
       <Icon name="download" size={17} />
       {#each [['csv', 'CSV'], ['xlsx', 'XLSX'], ['pdf-a4', 'PDF A4'], ['pdf-a3', 'PDF A3']] as option}
         <button
-          class="textbutton"
+          class="btn bg-transparent px-[9px] py-1.5 text-[13px] text-[#2459db]"
           type="button"
           disabled={exporting || !visibleSaved.length}
           onclick={() =>
@@ -491,12 +511,21 @@
   </nav>
 
   <div class="eyebrow">SLOVO PO SLOVU</div>
-  <h1>Čeština ve všech pádech.</h1>
-  <p class="intro">Vyhledejte podstatné jméno a uložte si jeho tvary.</p>
+  <h1
+    class="mt-[9px] text-[38px] leading-[1.2] tracking-[-1.5px] max-[700px]:text-[30px]"
+  >
+    Čeština ve všech pádech.
+  </h1>
+  <p class="mt-0.5 mb-[22px] text-[#52647c]">
+    Vyhledejte podstatné jméno a uložte si jeho tvary.
+  </p>
 
-  <section class="searchbox">
-    <label for="word">Které slovo chcete skloňovat?</label>
+  <section class="panel p-6 shadow-[0_6px_20px_#152e5510] max-[700px]:p-[17px]">
+    <label class="mb-2.5 block text-sm font-bold" for="word"
+      >Které slovo chcete skloňovat?</label
+    >
     <form
+      class="flex items-center gap-3.5 max-[700px]:flex-wrap"
       onsubmit={(event) => {
         event.preventDefault();
         void check().catch(() => {});
@@ -504,6 +533,7 @@
     >
       <Icon name="search" size={25} />
       <input
+        class="min-w-[100px] flex-1 rounded-[7px] border-0 bg-white px-2 py-[11px] text-xl text-[#182c47]"
         id="word"
         bind:value={word}
         oninput={updateSuggestions}
@@ -516,43 +546,57 @@
         {#each suggestions as suggestion}<option value={suggestion}
           ></option>{/each}
       </datalist>
-      <button type="submit" disabled={busy || !word.trim()}>
+      <button
+        class="btn max-[700px]:w-full"
+        type="submit"
+        disabled={busy || !word.trim()}
+      >
         {#if busy}<Icon name="loader" /> Ověřuji…{:else}Ověřit slovo <Icon
             name="arrow-right"
           />{/if}
       </button>
     </form>
-    <small
+    <small class="mt-3 block text-[13px] text-[#6a7a91]"
       >Návrhy běžných a uložených slov, i bez diakritiky. Po přihlášení také
       opravy podle příručky.</small
     >
   </section>
 
-  {#if error}<p class="notice error" role="alert">{error}</p>{/if}
+  {#if error}<p class="notice notice-error" role="alert">{error}</p>{/if}
 
   {#if view === 'lookup'}
     {#if result}
-      <section class="resultcard" aria-busy={busy}>
-        <div class="resulttop">
+      <section class="panel mt-[22px] overflow-hidden" aria-busy={busy}>
+        <div
+          class="flex justify-between gap-5 px-7 pt-7 pb-6 max-[700px]:flex-wrap max-[700px]:px-[18px] max-[700px]:pt-5"
+        >
           <div>
             <div class="eyebrow">VÝSLEDEK OVĚŘENÍ</div>
-            <h2>{result.word}</h2>
-            <div class="badges">
+            <h2 class="mt-[7px] mb-[13px] text-[38px] tracking-[-1px]">
+              {result.word}
+            </h2>
+            <div class="flex flex-wrap gap-2">
               {#each [...new Set(result.ijp.entries.map((entry) => entry.gender))] as entryGender}
-                <span class="badge"
+                <span
+                  class="rounded-[5px] border border-[#d7e5ff] bg-[#edf3ff] px-2.5 py-1 text-[13px] text-[#2459db]"
                   >{entryGender ? genders[entryGender] : 'Rod neurčen'}</span
                 >
               {/each}
             </div>
             {#if result.requested !== result.word}
-              <p class="correction">
+              <p class="max-w-[650px] text-sm text-[#52647c]">
                 Příručka opravila „{result.requested}“ na „{result.word}“.
               </p>
             {/if}
           </div>
-          <div class="savearea">
-            <small>{checkedAt(result.checkedAt)}</small>
+          <div
+            class="flex flex-col items-end justify-center gap-2.5 max-[700px]:items-start"
+          >
+            <small class="text-xs text-[#64758c] tabular-nums"
+              >{checkedAt(result.checkedAt)}</small
+            >
             <button
+              class="btn"
               type="button"
               disabled={saving ||
                 busy ||
@@ -566,16 +610,24 @@
               />
               {saving ? 'Ukládám…' : currentSaved ? 'Uloženo' : 'Uložit slovo'}
             </button>
-            {#if message}<small class="savehint"
+            {#if message}<small
+                class="inline-flex items-center gap-[5px] text-xs text-[#287158]"
                 ><Icon name="check" size={13} /> {message}</small
               >{/if}
           </div>
         </div>
 
-        <div class="sourcegrid">
-          <div class="sourceheading">
-            <span class:ok={result.ijp.status === 'ok'} class="dot"></span>
+        <div class="mx-7 mb-5 max-[700px]:mx-[18px] max-[700px]:mb-[18px]">
+          <div
+            class="flex min-h-[50px] flex-wrap items-center gap-2 rounded-[7px] border border-[#e0e7f0] px-3 py-2.5 text-sm"
+          >
+            <span
+              class="h-[7px] w-[7px] rounded-full {result.ijp.status === 'ok'
+                ? 'bg-[#248568]'
+                : 'bg-[#b58233]'}"
+            ></span>
             <a
+              class="inline-flex items-center gap-1 text-[#334e72] no-underline"
               href={result.ijp.entries.length
                 ? ijpUrlForWord(result.word)
                 : result.ijp.url}
@@ -587,7 +639,13 @@
                 size={14}
               />
             </a>
-            <small
+            {#if result.ijp.message}
+              <span
+                class="rounded-md bg-[#fff8e7] px-2.5 py-1.5 text-[12px] leading-snug text-[#795d21]"
+                >{result.ijp.message}</span
+              >
+            {/if}
+            <small class="ml-auto text-xs text-[#61738a]"
               >{result.ijp.status === 'ok'
                 ? 'Načteno'
                 : result.ijp.status === 'error'
@@ -597,21 +655,25 @@
           </div>
         </div>
 
-        <div class="comparison">
-          <table>
+        <div class="overflow-x-auto">
+          <table
+            class="data-table min-w-[800px] table-fixed text-[15px] [&_td:nth-child(2)]:border-l [&_td:nth-child(2)]:border-[#e6ecf4]"
+          >
             <colgroup
-              ><col class="casecolumn" /><col class="formcolumn" /><col
-                class="formcolumn"
-              /><col class="translationcolumn" /></colgroup
+              ><col class="w-[24%]" /><col class="w-[28%]" /><col
+                class="w-[28%]"
+              /><col class="w-[20%]" /></colgroup
             >
             <thead>
               <tr>
                 <th>Pád a otázka</th><th>Jednotné číslo</th><th>Množné číslo</th
                 >
-                <th class="translationhead">
+                <th class="border-l border-[#dbe3ee] text-center">
                   <label
+                    class="inline-flex items-center justify-center gap-[7px]"
                     >Překlad
                     <select
+                      class="select"
                       bind:value={translationLanguage}
                       aria-label="Jazyk překladu"
                       ><option value="rusky">RU</option><option value="anglicky"
@@ -626,28 +688,41 @@
               {#each caseNames as name, index}
                 <tr>
                   <td
-                    ><div class="casecell">
-                      <b>{index + 1}</b>
+                    ><div class="flex min-w-[145px] items-center gap-3">
+                      <b
+                        class="grid h-[27px] w-[27px] shrink-0 place-items-center rounded-[7px] border border-[#dae4f1] bg-[#f6f8fc] text-[13px] font-medium text-[#426086]"
+                        >{index + 1}</b
+                      >
                       <div>
-                        <strong>{name}</strong><small>{questions[index]}</small>
+                        <strong class="text-sm">{name}</strong><small
+                          class="mt-0.5 block text-xs text-[#6a7a91]"
+                          >{questions[index]}</small
+                        >
                       </div>
                     </div></td
                   >
                   <td>{formText(result.ijp, 'singular', index)}</td>
                   <td>{formText(result.ijp, 'plural', index)}</td>
                   {#if index === 0}
-                    <td class="translationcell" rowspan={caseNames.length}>
+                    <td
+                      class="border-l border-[#e6ecf4] text-center align-middle"
+                      rowspan={caseNames.length}
+                    >
                       {#if result.translations?.[translationLanguage]?.senses.length}
-                        <div class="translationcontent">
+                        <div
+                          class="flex max-h-[350px] flex-col gap-[13px] overflow-y-auto px-1 py-0.5 text-left"
+                        >
                           {#each result.translations[translationLanguage].senses as sense}
-                            <div class="translationsense">
-                              {#if sense.meaning}<small>{sense.meaning}</small
+                            <div class="flex flex-col gap-[5px]">
+                              {#if sense.meaning}<small class="text-[#64758c]"
+                                  >{sense.meaning}</small
                                 >{/if}
                               {#if sense.translations.length}<strong
+                                  class="text-sm text-[#162e49]"
                                   >{sense.translations.join(', ')}</strong
                                 >{/if}
                               {#each sense.phrases as phrase}<div
-                                  class="translationphrase"
+                                  class="grid gap-px pt-[3px] text-xs leading-[1.35] [&>span:last-child]:text-[#52647c]"
                                 >
                                   <span>{phrase.source}</span><span
                                     >{phrase.target}</span
@@ -656,7 +731,7 @@
                             </div>
                           {/each}
                           <a
-                            class="translationmore"
+                            class="inline-flex items-center justify-center gap-[5px] border-t border-[#e3e9f1] pt-2.5 text-xs font-bold no-underline"
                             href={translationHref(result)}
                             target="_blank"
                             rel="noreferrer"
@@ -668,7 +743,7 @@
                         </div>
                       {:else}
                         <a
-                          class="translationfallback"
+                          class="inline-flex items-center justify-center gap-[5px] text-xs font-bold no-underline"
                           href={translationHref(result)}
                           target="_blank"
                           rel="noreferrer"
@@ -683,64 +758,86 @@
             </tbody>
           </table>
         </div>
-        {#if result.ijp.message}<p class="notice">{result.ijp.message}</p>{/if}
       </section>
     {:else}
-      <section class="welcome">
+      <section
+        class="mt-[22px] rounded-xl border border-dashed border-[#cbd6e6] bg-[#f9fbff] px-6 py-[52px] text-center [&>svg]:mx-auto [&>svg]:text-[#2459db]"
+      >
         <Icon name="book" size={32} />
-        <h2>Každý pád na svém místě.</h2>
-        <p>Všech 7 pádů v jednotném i množném čísle, vedle sebe.</p>
+        <h2 class="mt-3.5 text-[23px] tracking-[-0.5px]">
+          Každý pád na svém místě.
+        </h2>
+        <p class="text-[#52647c]">
+          Všech 7 pádů v jednotném i množném čísle, vedle sebe.
+        </p>
       </section>
     {/if}
   {:else}
-    <section class="resultcard savedcard">
-      <div class="savedtop">
+    <section class="panel mt-[22px] overflow-hidden">
+      <div class="flex items-center justify-between px-7 pt-[22px]">
         <div>
-          <h2>Můj slovník</h2>
-          <p>{session?.user.email || 'Přihlaste se pro vlastní slovník.'}</p>
+          <h2 class="text-[23px] tracking-[-0.5px]">Můj slovník</h2>
+          <p class="mt-1.5 mb-0 text-[13px] text-[#64758c]">
+            {session?.user.email || 'Přihlaste se pro vlastní slovník.'}
+          </p>
         </div>
         <button
-          class="secondary refreshbutton"
+          class="btn btn-secondary h-[50px] w-[50px] p-0"
           type="button"
           aria-label="Obnovit slovník"
           disabled={savedBusy || !session}
           onclick={refresh}><Icon name="refresh" size={22} /></button
         >
       </div>
-      <div class="genderfilters" aria-label="Filtr rodu">
+      <div
+        class="mx-7 mt-5 mb-6 grid grid-cols-4 gap-2.5 max-[700px]:mx-[18px] max-[700px]:gap-[7px]"
+        aria-label="Filtr rodu"
+      >
         {#each [['all', 'Vše'], ['M', 'M · životný'], ['I', 'M · neživotný'], ['F', 'Ž · ženský'], ['N', 'S · střední']] as filter}
           <button
-            class:active={gender === filter[0]}
+            class="btn btn-secondary min-h-11 max-[700px]:px-[5px] max-[700px]:text-xs {filter[0] ===
+            'all'
+              ? 'col-span-4 min-h-[50px] w-full max-w-[260px] justify-self-center text-[17px]'
+              : ''} {gender === filter[0]
+              ? '!border-[#2459db] !bg-[#2459db] !text-white'
+              : ''}"
             type="button"
             onclick={() => (gender = filter[0] as 'all' | Gender)}
             >{filter[1]}</button
           >
         {/each}
       </div>
-      {#if savedError}<p class="notice error">{savedError}</p>{/if}
+      {#if savedError}<p class="notice notice-error">{savedError}</p>{/if}
       {#if !session}
-        <div class="emptysaved">
+        <div
+          class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#2459db]"
+        >
           <Icon name="lock" size={30} />
           <p>Přihlaste se pro zobrazení vlastního slovníku.</p>
         </div>
       {:else if savedBusy && !saved.length}
-        <div class="emptysaved">
+        <div
+          class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#2459db]"
+        >
           <Icon name="loader" size={30} />
           <p>Načítám slovník…</p>
         </div>
       {:else if !visibleSaved.length}
-        <div class="emptysaved">
+        <div
+          class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#2459db]"
+        >
           <Icon name="bookmark" size={30} />
           <p>Váš slovník čeká na první slovo.</p>
         </div>
       {:else}
-        <div class="savedtable">
-          <table>
+        <div class="overflow-x-auto px-7 max-[700px]:px-[18px]">
+          <table class="data-table saved-table max-[700px]:min-w-[780px]">
             <thead
               ><tr
                 ><th>Slovo</th><th>Rod</th><th>Uloženo</th><th
                   ><label
                     >Překlad <select
+                      class="select"
                       bind:value={translationLanguage}
                       aria-label="Jazyk překladu"
                       ><option value="rusky">RU</option><option value="anglicky"
@@ -777,12 +874,13 @@
                       href={translationHref(row.result)}
                       target="_blank"
                       rel="noreferrer"
+                      class="inline-flex items-center gap-[5px] font-bold no-underline"
                       onclick={(event) => event.stopPropagation()}
                       >{translationText(row.result, true)}
                       <Icon name="arrow-up-right" size={12} /></a
                     ></td
                   >
-                  <td class="rowaction"
+                  <td class="w-[1%] text-right text-[#2459db]"
                     ><Icon name="arrow-up-right" size={17} /></td
                   >
                 </tr>
@@ -791,59 +889,69 @@
           </table>
         </div>
       {/if}
-      <p class="exportnote">
+      <p
+        class="mx-7 mt-1 mb-[18px] text-xs text-[#64758c] max-[700px]:mx-[18px]"
+      >
         Export zahrnuje všechna slova z aktuálně vybraného rodu a všech 14
         pádových pozic.
       </p>
     </section>
   {/if}
 
-  <footer>
+  <footer
+    class="mt-8 flex justify-between gap-5 text-xs text-[#738398] max-[700px]:flex-wrap"
+  >
     <span>České pády · Váš prostor pro češtinu</span><a
       href="https://prirucka.ujc.cas.cz/"
       target="_blank"
-      rel="noreferrer">ÚJČ AV ČR <Icon name="arrow-up-right" size={12} /></a
+      rel="noreferrer"
+      class="inline-flex items-center gap-1 text-[#52647c] no-underline"
+      >ÚJČ AV ČR <Icon name="arrow-up-right" size={12} /></a
     >
   </footer>
 </main>
 
 {#if loginOpen}
   <div
-    class="modalbackdrop"
+    class="fixed inset-0 z-50 grid place-items-center bg-[#10203980] p-5"
     role="presentation"
     onclick={() => (loginOpen = false)}
   >
     <dialog
-      class="loginmodal"
+      class="relative m-0 w-full max-w-[440px] rounded-[14px] border-0 bg-white p-[26px] text-[#182c47] shadow-[0_24px_80px_#1020393b]"
       open
       aria-labelledby="login-title"
       onclick={(event) => event.stopPropagation()}
     >
       <button
-        class="closebutton"
+        class="absolute top-3 right-3 h-9 w-9 bg-transparent p-0 text-2xl text-[#52647c]"
         type="button"
         aria-label="Zavřít"
         onclick={() => (loginOpen = false)}>×</button
       >
       <h2 id="login-title">Přihlášení do slovníku</h2>
-      <p>Každý účet vidí pouze vlastní uložená slova.</p>
-      <form onsubmit={signIn}>
-        <label for="email">E-mail</label><input
+      <p class="text-[#64758c]">Každý účet vidí pouze vlastní uložená slova.</p>
+      <form class="flex flex-col gap-2.5" onsubmit={signIn}>
+        <label class="text-sm font-bold" for="email">E-mail</label><input
+          class="rounded-[7px] border border-[#dbe3ee] px-[13px] py-[11px]"
           id="email"
           type="email"
           bind:value={email}
           autocomplete="email"
           required
         />
-        <label for="password">Heslo</label><input
+        <label class="text-sm font-bold" for="password">Heslo</label><input
+          class="rounded-[7px] border border-[#dbe3ee] px-[13px] py-[11px]"
           id="password"
           type="password"
           bind:value={password}
           autocomplete="current-password"
           required
         />
-        {#if authError}<p class="notice error" role="alert">{authError}</p>{/if}
-        <button type="submit" disabled={authBusy}
+        {#if authError}<p class="notice notice-error" role="alert">
+            {authError}
+          </p>{/if}
+        <button class="btn" type="submit" disabled={authBusy}
           >{authBusy ? 'Přihlašuji…' : 'Přihlásit se'}</button
         >
       </form>
