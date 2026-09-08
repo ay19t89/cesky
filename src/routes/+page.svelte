@@ -27,39 +27,41 @@
     message?: string;
   };
 
-  let session: Session | null = null;
-  let authReady = false;
-  let loginOpen = false;
-  let email = '';
-  let password = '';
-  let authError = '';
-  let authBusy = false;
-  let word = '';
-  let suggestions: string[] = [];
-  let result: Lookup | null = null;
-  let busy = false;
-  let error = '';
-  let message = '';
-  let saved: Saved[] = [];
-  let savedBusy = false;
-  let savedError = '';
-  let saving = false;
-  let currentSaved = false;
-  let exporting = false;
-  let view: 'lookup' | 'saved' = 'lookup';
-  let gender: 'all' | Gender = 'all';
-  let translationLanguage: TranslationLanguage = 'rusky';
-  let requestId = 0;
-  let suggestionTimer: ReturnType<typeof setTimeout> | undefined;
+  let session = $state<Session | null>(null);
+  let authReady = $state(false);
+  let loginOpen = $state(false);
+  let email = $state('');
+  let password = $state('');
+  let authError = $state('');
+  let authBusy = $state(false);
+  let word = $state('');
+  let suggestions = $state<string[]>([]);
+  let result = $state<Lookup | null>(null);
+  let busy = $state(false);
+  let error = $state('');
+  let message = $state('');
+  let saved = $state<Saved[]>([]);
+  let savedBusy = $state(false);
+  let savedError = $state('');
+  let saving = $state(false);
+  let currentSaved = $state(false);
+  let exporting = $state(false);
+  let view = $state<'lookup' | 'saved'>('lookup');
+  let gender = $state<'all' | Gender>('all');
+  let translationLanguage = $state<TranslationLanguage>('rusky');
+  let requestId = $state(0);
+  let suggestionTimer = $state<ReturnType<typeof setTimeout> | undefined>();
   const translationLoads = new Set<string>();
 
-  $: visibleSaved = saved
-    .filter(
-      (item) =>
-        gender === 'all' ||
-        item.result.ijp.entries.some((entry) => entry.gender === gender)
-    )
-    .sort((left, right) => compareCzechWords(left.word, right.word));
+  const visibleSaved = $derived.by(() =>
+    saved
+      .filter(
+        (item) =>
+          gender === 'all' ||
+          item.result.ijp.entries.some((entry) => entry.gender === gender)
+      )
+      .sort((left, right) => compareCzechWords(left.word, right.word))
+  );
 
   function endpoint(): string {
     return `${SUPABASE_URL}/functions/v1/dictionary`;

@@ -129,8 +129,9 @@ h2 {
 
 .viewbar {
   position: sticky;
+  isolation: isolate;
   z-index: 20;
-  top: 10px;
+  top: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -138,24 +139,16 @@ h2 {
   gap: 14px;
   margin: -18px -10px 26px;
   padding: 10px;
-  border: 1px solid #c9d6e8;
+  border: 1px solid #b9c9dd;
+  border-top-width: 2px;
   border-radius: 12px;
-  background: #f7fafffa;
+  background: #f8fafffa;
   box-shadow:
-    0 12px 34px #17375f26,
-    0 3px 10px #17375f14;
+    0 -4px 16px #17375f12,
+    0 8px 24px #17375f1f,
+    0 2px 7px #17375f12,
+    inset 0 1px #ffffff;
   backdrop-filter: blur(16px);
-}
-.viewbar::before {
-  position: absolute;
-  z-index: -1;
-  top: -18px;
-  right: -1px;
-  left: -1px;
-  height: 18px;
-  background: linear-gradient(to bottom, #f4f7fcb8, #f4f7fcf2);
-  content: '';
-  pointer-events: none;
 }
 .tabs,
 .exports {
