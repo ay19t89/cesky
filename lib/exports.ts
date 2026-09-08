@@ -1,7 +1,8 @@
 import { cases, genders, type Lookup, type Paradigm } from './types';
 import { ijpUrlForWord } from './ijp-url';
+import { translationUrl } from './translation';
 
-export const headers = ['Rod', 'Slovo', 'Číslo', ...cases, 'Odkaz'];
+export const headers = ['Rod', 'Slovo', 'Číslo', ...cases, 'Překlad', 'Odkaz'];
 
 const czechCollator = new Intl.Collator('cs', {
   sensitivity: 'base',
@@ -38,14 +39,15 @@ function genderLabel(entry: Paradigm | null): string {
 export function exportRows(results: Lookup[]): string[][] {
   return entriesForExport(results).flatMap(({ result, entry }) => {
     const word = entry?.lemma || result.word;
-    const link = ijpUrlForWord(word);
+    const sourceLink = ijpUrlForWord(word);
 
     return (['singular', 'plural'] as const).map((number) => [
       genderLabel(entry),
       word,
       number === 'singular' ? 'Jednotné' : 'Množné',
       ...cases.map((_, index) => entry?.[number][index].join(', ') || '—'),
-      link,
+      translationUrl(number === 'singular' ? 'anglicky' : 'rusky', word),
+      sourceLink,
     ]);
   });
 }
@@ -57,7 +59,12 @@ function csvCell(value: string, allowFormula = false): string {
 }
 
 function csvHyperlink(url: string): string {
-  if (!url.startsWith('https://prirucka.ujc.cas.cz/')) return url;
+  if (
+    !url.startsWith('https://prirucka.ujc.cas.cz/') &&
+    !url.startsWith('https://slovnik.seznam.cz/preklad/')
+  ) {
+    return url;
+  }
   const formulaUrl = url.replaceAll('"', '""');
   return `=HYPERLINK("${formulaUrl}","${formulaUrl}")`;
 }
@@ -67,14 +74,10 @@ export function csvText(results: Lookup[]): string {
   return `\ufeff${rows
     .map((row, rowIndex) =>
       row
-        .map((value, columnIndex) =>
-          csvCell(
-            rowIndex > 0 && columnIndex === headers.length - 1
-              ? csvHyperlink(value)
-              : value,
-            rowIndex > 0 && columnIndex === headers.length - 1,
-          ),
-        )
+        .map((value, columnIndex) => {
+          const isLink = rowIndex > 0 && columnIndex >= headers.length - 2;
+          return csvCell(isLink ? csvHyperlink(value) : value, isLink);
+        })
         .join(','),
     )
     .join('\r\n')}`;
@@ -100,7 +103,7 @@ async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
   const rows = exportRows(results);
   sheet.addRows([headers, ...rows]);
 
-  const widths = [16, 18, 11, 18, 18, 18, 18, 18, 18, 18, 48];
+  const widths = [16, 18, 11, 18, 18, 18, 18, 18, 18, 18, 42, 48];
   sheet.columns.forEach((column, index) => {
     column.width = widths[index];
     column.alignment = {
@@ -116,7 +119,7 @@ async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
   header.fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FFD9EFE5' },
+    fgColor: { argb: 'FFE0F0E8' },
   };
 
   rows.forEach((_, index) => {
@@ -124,13 +127,10 @@ async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
     row.height = 24;
     row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
 
-    const linkCell = row.getCell(headers.length);
-    const link = rows[index][headers.length - 1];
-    if (link.startsWith('https://prirucka.ujc.cas.cz/')) {
-      linkCell.value = {
-        text: link,
-        hyperlink: link,
-      };
+    for (const columnIndex of [headers.length - 1, headers.length]) {
+      const linkCell = row.getCell(columnIndex);
+      const link = rows[index][columnIndex - 1];
+      linkCell.value = { text: link, hyperlink: link };
       linkCell.font = { color: { argb: 'FF0563C1' }, underline: true };
     }
 
@@ -153,7 +153,7 @@ async function exportXlsx(results: Lookup[], filename: string): Promise<void> {
     }
   });
 
-  sheet.autoFilter = { from: 'A1', to: 'K1' };
+  sheet.autoFilter = { from: 'A1', to: 'L1' };
 
   const buffer = await workbook.xlsx.writeBuffer();
   download(
@@ -260,7 +260,7 @@ async function exportPdf(
         },
         headStyles: {
           fontStyle: 'bold',
-          fillColor: [217, 239, 229],
+          fillColor: [224, 240, 232],
           textColor: [23, 76, 58],
         },
         alternateRowStyles: { fillColor: [247, 249, 252] },

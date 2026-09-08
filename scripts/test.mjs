@@ -158,6 +158,7 @@ assert.deepEqual(headers, [
   '5. pád',
   '6. pád',
   '7. pád',
+  'Překlad',
   'Odkaz',
 ]);
 assert.deepEqual(
@@ -171,7 +172,9 @@ assert.equal(rows[0][0], 'Ž · ženský');
 assert.equal(rows[0][2], 'Jednotné');
 assert.equal(rows[1][2], 'Množné');
 assert.equal(rows[0][5], 'ženě');
-assert.equal(rows[0][10], fixture.ijp.url);
+assert.equal(rows[0][10], translationUrl('anglicky', 'žena'));
+assert.equal(rows[1][10], translationUrl('rusky', 'žena'));
+assert.equal(rows[0][11], fixture.ijp.url);
 
 const correctedFixture = {
   ...fixture,
@@ -187,8 +190,12 @@ const correctedFixture = {
   },
 };
 assert.equal(
-  exportRows([correctedFixture])[0][10],
+  exportRows([correctedFixture])[0][11],
   'https://prirucka.ujc.cas.cz/?slovo=mo%C5%99e',
+);
+assert.equal(
+  exportRows([correctedFixture])[0][10],
+  'https://slovnik.seznam.cz/preklad/cesky_anglicky/mo%C5%99e',
 );
 
 const csv = csvText([fixture]);
@@ -198,6 +205,16 @@ assert.ok(!csv.includes('Ověřeno'));
 assert.ok(
   csv.includes(
     '"=HYPERLINK(""https://prirucka.ujc.cas.cz/?slovo=%C5%BEena"",""https://prirucka.ujc.cas.cz/?slovo=%C5%BEena"")"',
+  ),
+);
+assert.ok(
+  csv.includes(
+    '"=HYPERLINK(""https://slovnik.seznam.cz/preklad/cesky_anglicky/%C5%BEena"",""https://slovnik.seznam.cz/preklad/cesky_anglicky/%C5%BEena"")"',
+  ),
+);
+assert.ok(
+  csv.includes(
+    '"=HYPERLINK(""https://slovnik.seznam.cz/preklad/cesky_rusky/%C5%BEena"",""https://slovnik.seznam.cz/preklad/cesky_rusky/%C5%BEena"")"',
   ),
 );
 await writeFile('.test-build/export-layout.csv', csv);
@@ -236,6 +253,14 @@ assert.equal(workbook.worksheets[0].getCell('F2').value, 'ženě');
 assert.equal(workbook.worksheets[0].getCell('C2').value, 'Jednotné');
 assert.equal(workbook.worksheets[0].getCell('C3').value, 'Množné');
 assert.deepEqual(workbook.worksheets[0].getCell('K2').value, {
+  text: translationUrl('anglicky', 'žena'),
+  hyperlink: translationUrl('anglicky', 'žena'),
+});
+assert.deepEqual(workbook.worksheets[0].getCell('K3').value, {
+  text: translationUrl('rusky', 'žena'),
+  hyperlink: translationUrl('rusky', 'žena'),
+});
+assert.deepEqual(workbook.worksheets[0].getCell('L2').value, {
   text: fixture.ijp.url,
   hyperlink: fixture.ijp.url,
 });
@@ -244,7 +269,7 @@ assert.equal(workbook.worksheets[0].getColumn(2).width, 18);
 assert.equal(workbook.worksheets[0].getColumn(3).width, 11);
 assert.equal(
   workbook.worksheets[0].getCell('A1').fill.fgColor.argb,
-  'FFD9EFE5',
+  'FFE0F0E8',
 );
 assert.equal(workbook.worksheets[0].getCell('A1').font.bold, true);
 
