@@ -668,20 +668,7 @@
               <tr>
                 <th>Pád a otázka</th><th>Jednotné číslo</th><th>Množné číslo</th
                 >
-                <th class="border-l border-[#dbe3ee] text-center">
-                  <label
-                    class="inline-flex items-center justify-center gap-[7px]"
-                    >Překlad
-                    <select
-                      class="select"
-                      bind:value={translationLanguage}
-                      aria-label="Jazyk překladu"
-                      ><option value="rusky">RU</option><option value="anglicky"
-                        >EN</option
-                      ></select
-                    >
-                  </label>
-                </th>
+                <th class="border-l border-[#dbe3ee] text-center"> Překlad </th>
               </tr>
             </thead>
             <tbody>
@@ -708,49 +695,26 @@
                       class="border-l border-[#e6ecf4] text-center align-middle"
                       rowspan={caseNames.length}
                     >
-                      {#if result.translations?.[translationLanguage]?.senses.length}
-                        <div
-                          class="flex max-h-[350px] flex-col gap-[13px] overflow-y-auto px-1 py-0.5 text-left"
-                        >
-                          {#each result.translations[translationLanguage].senses as sense}
-                            <div class="flex flex-col gap-[5px]">
-                              {#if sense.meaning}<small class="text-[#64758c]"
-                                  >{sense.meaning}</small
-                                >{/if}
-                              {#if sense.translations.length}<strong
-                                  class="text-sm text-[#162e49]"
-                                  >{sense.translations.join(', ')}</strong
-                                >{/if}
-                              {#each sense.phrases as phrase}<div
-                                  class="grid gap-px pt-[3px] text-xs leading-[1.35] [&>span:last-child]:text-[#52647c]"
-                                >
-                                  <span>{phrase.source}</span><span
-                                    >{phrase.target}</span
-                                  >
-                                </div>{/each}
-                            </div>
-                          {/each}
-                          <a
-                            class="inline-flex items-center justify-center gap-[5px] border-t border-[#e3e9f1] pt-2.5 text-xs font-bold no-underline"
-                            href={translationHref(result)}
-                            target="_blank"
-                            rel="noreferrer"
-                            >Seznam Slovník <Icon
-                              name="arrow-up-right"
-                              size={13}
-                            /></a
-                          >
-                        </div>
-                      {:else}
+                      <div
+                        class="flex flex-col items-center justify-center gap-3 text-sm"
+                      >
                         <a
-                          class="inline-flex items-center justify-center gap-[5px] text-xs font-bold no-underline"
-                          href={translationHref(result)}
+                          class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                          href={translationUrl('anglicky', result.word)}
                           target="_blank"
                           rel="noreferrer"
-                          >{translationText(result)}
+                          >Anglicky
                           <Icon name="arrow-up-right" size={13} /></a
                         >
-                      {/if}
+                        <a
+                          class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                          href={translationUrl('rusky', result.word)}
+                          target="_blank"
+                          rel="noreferrer"
+                          >Rusky
+                          <Icon name="arrow-up-right" size={13} /></a
+                        >
+                      </div>
                     </td>
                   {/if}
                 </tr>
