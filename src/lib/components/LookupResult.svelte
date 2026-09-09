@@ -9,6 +9,7 @@
     result,
     busy,
     saving,
+    signedIn,
     currentSaved,
     message,
     onToggleSaved
@@ -16,6 +17,7 @@
     result: Lookup;
     busy: boolean;
     saving: boolean;
+    signedIn: boolean;
     currentSaved: boolean;
     message: string;
     onToggleSaved: () => void;
@@ -54,7 +56,8 @@
       <button
         class="btn"
         type="button"
-        disabled={saving || busy || !result.ijp.entries.length}
+        disabled={saving || busy || !signedIn || !result.ijp.entries.length}
+        title={signedIn ? undefined : 'Pro ukládání slov se přihlaste.'}
         onclick={onToggleSaved}
       >
         <Icon name={currentSaved ? 'bookmark-check' : 'bookmark'} size={17} />

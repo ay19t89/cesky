@@ -392,6 +392,7 @@
         {result}
         {busy}
         {saving}
+        signedIn={Boolean(session)}
         {currentSaved}
         {message}
         onToggleSaved={() => void toggleSaved()}
