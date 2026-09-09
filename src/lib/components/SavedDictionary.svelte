@@ -58,7 +58,7 @@
         'all'
           ? 'col-span-4 min-h-[50px] w-full max-w-[260px] justify-self-center text-[17px]'
           : ''} {gender === filter[0]
-          ? '!border-[#2459db] !bg-[#2459db] !text-white'
+          ? '!border-[#4268bd] !bg-[#4268bd] !text-white'
           : ''}"
         type="button"
         onclick={() => onGender(filter[0])}>{filter[1]}</button
@@ -68,21 +68,21 @@
   {#if error}<p class="notice notice-error">{error}</p>{/if}
   {#if !email}
     <div
-      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#2459db]"
+      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#4268bd]"
     >
       <Icon name="lock" size={30} />
       <p>Přihlaste se pro zobrazení vlastního slovníku.</p>
     </div>
   {:else if busy && !rows.length}
     <div
-      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#2459db]"
+      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#4268bd]"
     >
       <Icon name="loader" size={30} />
       <p>Načítám slovník…</p>
     </div>
   {:else if !rows.length}
     <div
-      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#2459db]"
+      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#4268bd]"
     >
       <Icon name="bookmark" size={30} />
       <p>Váš slovník čeká na první slovo.</p>
@@ -125,7 +125,7 @@
                     href={translationUrl('anglicky', row.word)}
                     target="_blank"
                     rel="noreferrer"
-                    class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                    class="inline-flex items-center gap-[5px] font-bold text-[#4268bd] no-underline"
                     onclick={(event) => event.stopPropagation()}
                     >Anglický <Icon name="arrow-up-right" size={12} /></a
                   >
@@ -133,13 +133,13 @@
                     href={translationUrl('rusky', row.word)}
                     target="_blank"
                     rel="noreferrer"
-                    class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                    class="inline-flex items-center gap-[5px] font-bold text-[#4268bd] no-underline"
                     onclick={(event) => event.stopPropagation()}
                     >Ruský <Icon name="arrow-up-right" size={12} /></a
                   >
                 </div>
               </td>
-              <td class="w-[1%] text-right text-[#2459db]"
+              <td class="w-[1%] text-right text-[#4268bd]"
                 ><Icon name="arrow-up-right" size={17} /></td
               >
             </tr>

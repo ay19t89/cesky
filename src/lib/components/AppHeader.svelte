@@ -18,7 +18,7 @@
   class="flex items-center justify-between border-b border-[#dbe3ee] bg-white px-[5vw] py-[22px]"
 >
   <a
-    class="flex items-center gap-3 text-[23px] tracking-[-0.6px] text-[#182c47] no-underline [&>svg]:text-[#2459db]"
+    class="flex items-center gap-3 text-[23px] tracking-[-0.6px] text-[#182c47] no-underline [&>svg]:text-[#4268bd]"
     href="/"
     aria-label="České pády – úvod"
   >

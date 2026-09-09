@@ -50,7 +50,7 @@
 
 @layer components {
   .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#2459db] px-[18px] py-[11px] font-bold text-white;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#4268bd] px-[18px] py-[11px] font-bold text-white;
   }
 
   .btn-secondary {
@@ -58,7 +58,7 @@
   }
 
   .tab {
-    @apply relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#2459db] px-3 py-1.5 text-sm font-bold text-white;
+    @apply relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#4268bd] px-3 py-1 text-sm font-bold text-white;
   }
 
   .panel {
@@ -66,7 +66,7 @@
   }
 
   .eyebrow {
-    @apply text-xs font-bold tracking-[2px] text-[#2459db];
+    @apply text-xs font-bold tracking-[2px] text-[#4268bd];
   }
 
   .notice {

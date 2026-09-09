@@ -36,7 +36,7 @@
       <div class="flex flex-wrap gap-2">
         {#each [...new Set(result.ijp.entries.map((entry) => entry.gender))] as entryGender}
           <span
-            class="rounded-[5px] border border-[#d7e5ff] bg-[#edf3ff] px-2.5 py-1 text-[13px] text-[#2459db]"
+            class="rounded-[5px] border border-[#d7e5ff] bg-[#edf3ff] px-2.5 py-1 text-[13px] text-[#4268bd]"
             >{entryGender ? genders[entryGender] : 'Rod neurčen'}</span
           >
         {/each}
@@ -147,14 +147,14 @@
                   class="flex flex-col items-center justify-center gap-3 text-sm"
                 >
                   <a
-                    class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                    class="inline-flex items-center gap-[5px] font-bold text-[#4268bd] no-underline"
                     href={translationUrl('anglicky', result.word)}
                     target="_blank"
                     rel="noreferrer"
                     >Anglicky <Icon name="arrow-up-right" size={13} /></a
                   >
                   <a
-                    class="inline-flex items-center gap-[5px] font-bold text-[#2459db] no-underline"
+                    class="inline-flex items-center gap-[5px] font-bold text-[#4268bd] no-underline"
                     href={translationUrl('rusky', result.word)}
                     target="_blank"
                     rel="noreferrer"

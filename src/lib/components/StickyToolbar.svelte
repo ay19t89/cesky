@@ -33,7 +33,7 @@
   <div class="flex items-center gap-[7px]">
     <button
       class="tab {view === 'lookup'
-        ? 'after:absolute after:-bottom-[5px] after:left-2 after:right-2 after:h-[3px] after:rounded-full after:bg-[#49cdb1]'
+        ? 'outline outline-2 outline-offset-2 outline-[#65cdb5]'
         : ''}"
       type="button"
       onclick={() => onView('lookup')}
@@ -42,7 +42,7 @@
     </button>
     <button
       class="tab {view === 'saved'
-        ? 'after:absolute after:-bottom-[5px] after:left-2 after:right-2 after:h-[3px] after:rounded-full after:bg-[#49cdb1]'
+        ? 'outline outline-2 outline-offset-2 outline-[#65cdb5]'
         : ''}"
       type="button"
       onclick={() => onView('saved')}
@@ -61,7 +61,7 @@
     <Icon name="download" size={17} />
     {#each options as option}
       <button
-        class="btn bg-transparent px-[9px] py-1.5 text-[13px] text-[#2459db]"
+        class="btn bg-transparent px-[9px] py-1.5 text-[13px] text-[#4268bd]"
         type="button"
         disabled={exportDisabled}
         onclick={() => onExport(option[0])}>{option[1]}</button
