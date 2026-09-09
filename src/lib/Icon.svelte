@@ -26,22 +26,14 @@
   viewBox="0 0 24 24"
   fill="none"
   stroke="currentColor"
-  stroke-width="2"
+  stroke-width={filled && name === 'search' ? 3 : 2}
   stroke-linecap="round"
   stroke-linejoin="round"
   aria-hidden="true"
   class:spin={name === 'loader'}
 >
   {#if name === 'search'}
-    {#if filled}
-      <path
-        d="M10.5 3a7.5 7.5 0 1 0 4.66 13.38L20.78 22 22 20.78l-5.62-5.62A7.5 7.5 0 0 0 10.5 3Zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11Z"
-        fill="currentColor"
-        stroke="none"
-      />
-    {:else}
-      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-    {/if}
+    <circle cx="10" cy="10" r="8" /><path d="m21 21-4.3-4.3" />
   {:else if name === 'book'}
     <path d="M12 7v14" /><path
       d="M3 18a1 1 0 0 1-1-1V5a2 2 0 0 1 2-2h5a3 3 0 0 1 3 3v15a3 3 0 0 0-3-3Z"
