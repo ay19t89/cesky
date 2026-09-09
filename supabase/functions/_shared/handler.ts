@@ -1,37 +1,20 @@
-import { SUPABASE_URL, SUPABASE_KEY } from './config.ts';
 import { fetchIjp, lookup, validateWord } from './dictionary.ts';
 import { fetchTranslations } from './translation-source.ts';
 export async function handleDictionary(request: Request): Promise<Response> {
-  const token = request.headers.get('Authorization');
-  if (!token?.startsWith('Bearer '))
-    return Response.json(
-      { error: 'Přihlaste se pro ověření slova.' },
-      { status: 401 }
-    );
   try {
-    const headers = { apikey: SUPABASE_KEY, Authorization: token };
-    const user = await fetch(SUPABASE_URL + '/auth/v1/user', {
-      headers,
-      signal: AbortSignal.timeout(8000)
-    });
-    if (!user.ok)
-      return Response.json(
-        { error: 'Přihlášení vypršelo. Přihlaste se znovu.' },
-        { status: 401 }
-      );
     const url = new URL(request.url);
     const word = validateWord(url.searchParams.get('word'));
     if (url.searchParams.get('action') === 'suggest') {
       const data = await fetchIjp(word);
       return Response.json(
         { suggestions: [...new Set(data.entries.map((x) => x.lemma))] },
-        { headers: { 'Cache-Control': 'private, max-age=300' } }
+        { headers: { 'Cache-Control': 'public, max-age=300' } }
       );
     }
     if (url.searchParams.get('action') === 'translations') {
       return Response.json(
         { translations: await fetchTranslations(word) },
-        { headers: { 'Cache-Control': 'private, max-age=3600' } }
+        { headers: { 'Cache-Control': 'public, max-age=3600' } }
       );
     }
     return Response.json(await lookup(word), {

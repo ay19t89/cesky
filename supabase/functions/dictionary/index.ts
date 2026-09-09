@@ -1,6 +1,6 @@
 import { handleDictionary } from '../_shared/handler.ts';
-// Public CORS is intentional: every request still requires a verified user JWT
-// and membership. No database credentials or upstream URLs come from callers.
+// Lookup is public. Personal dictionary reads and writes happen separately
+// through authenticated Supabase clients and remain protected by RLS.
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':

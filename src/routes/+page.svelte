@@ -13,7 +13,7 @@
     type View
   } from '$lib/components/StickyToolbar.svelte';
   import Icon from '$lib/Icon.svelte';
-  import { SUPABASE_URL } from '$lib/config';
+  import { SUPABASE_KEY, SUPABASE_URL } from '$lib/config';
   import { compareCzechWords, exportData } from '$lib/exports';
   import { suggest } from '$lib/suggestions';
   import { supabase } from '$lib/supabase';
@@ -69,14 +69,9 @@
     action = 'lookup',
     signal?: AbortSignal
   ): Promise<ApiResponse> {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      throw new Error('Pro ověření se přihlaste ke svému slovníku.');
-    }
-
     const query = new URLSearchParams({ word: value, action });
     const response = await fetch(`${endpoint()}?${query}`, {
-      headers: { Authorization: `Bearer ${data.session.access_token}` },
+      headers: { apikey: SUPABASE_KEY },
       signal
     });
     const json = (await response.json().catch(() => ({
@@ -96,7 +91,7 @@
     );
     suggestions = local;
     if (suggestionTimer) clearTimeout(suggestionTimer);
-    if (!session || word.trim().length < 3) return;
+    if (word.trim().length < 3) return;
 
     const value = word.trim();
     suggestionTimer = setTimeout(() => {
@@ -140,10 +135,6 @@
 
   async function check(value = word): Promise<Lookup> {
     if (!value.trim()) throw new Error('Zadejte slovo.');
-    if (!session) {
-      loginOpen = true;
-      throw new Error('Pro ověření se přihlaste.');
-    }
 
     const activeRequest = ++requestId;
     busy = true;
@@ -159,12 +150,14 @@
         word = data.word;
       }
       if (!data.ijp.entries.length) return data;
+      const activeSession = session;
+      if (!activeSession) return data;
 
       const response = await supabase.from('czech_words').upsert(
         {
           word: data.word,
           result: data,
-          user_id: session.user.id,
+          user_id: activeSession.user.id,
           updated_at: new Date().toISOString()
         },
         { onConflict: 'user_id,word' }
@@ -209,7 +202,11 @@
   }
 
   async function toggleSaved(): Promise<void> {
-    if (!result || !session) return;
+    if (!result) return;
+    if (!session) {
+      loginOpen = true;
+      return;
+    }
     saving = true;
     error = '';
     message = '';
@@ -328,7 +325,6 @@
       session = nextSession;
       authReady = true;
       if (changed) {
-        result = null;
         currentSaved = false;
         saved = [];
         message = '';
@@ -396,7 +392,6 @@
         {result}
         {busy}
         {saving}
-        signedIn={Boolean(session)}
         {currentSaved}
         {message}
         onToggleSaved={() => void toggleSaved()}

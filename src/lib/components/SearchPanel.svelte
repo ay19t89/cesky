@@ -80,7 +80,7 @@
     </button>
   </form>
   <small class="mt-3 block text-[13px] text-[#6a7a91]"
-    >Návrhy běžných a uložených slov, i bez diakritiky. Po přihlášení také
-    opravy podle příručky.</small
+    >Návrhy běžných a uložených slov, i bez diakritiky. Přihlášení je potřeba
+    jen pro osobní slovník.</small
   >
 </section>
