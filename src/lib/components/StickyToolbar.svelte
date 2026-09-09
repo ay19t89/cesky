@@ -27,41 +27,39 @@
 </script>
 
 <nav
-  class="sticky top-3 z-20 mx-auto -mt-[18px] mb-[34px] flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3.5 rounded-xl border border-[#cbd8e8] bg-[#f7faff]/95 p-2.5 shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)] ring-1 ring-white/80 backdrop-blur-xl max-[700px]:-mx-2.5 max-[700px]:w-auto"
+  class="sticky top-3 z-20 mx-auto -mt-4 mb-8 flex w-full max-w-3xl flex-wrap items-center justify-between gap-3.5 rounded-xl border border-[#cbd8e8] bg-[#f7faff]/95 p-2.5 shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)] ring-1 ring-white/80 backdrop-blur-xl max-[700px]:-mx-2.5 max-[700px]:w-auto"
   aria-label="Hlavní pohledy a export"
 >
-  <div class="flex items-center gap-[7px]">
+  <div class="flex items-center gap-2">
     <button
-      class="tab {view === 'lookup'
-        ? 'outline outline-2 outline-offset-2 outline-[#65cdb5]'
-        : ''}"
+      class="tab"
       type="button"
+      aria-pressed={view === 'lookup'}
       onclick={() => onView('lookup')}
     >
-      <Icon name="search" size={16} /> Ověření slova
+      <Icon name="search" size={16} filled={view === 'lookup'} /> Ověření slova
     </button>
     <button
-      class="tab {view === 'saved'
-        ? 'outline outline-2 outline-offset-2 outline-[#65cdb5]'
-        : ''}"
+      class="tab"
       type="button"
+      aria-pressed={view === 'saved'}
       onclick={() => onView('saved')}
     >
-      <Icon name="bookmark" size={16} /> Můj slovník
+      <Icon name="bookmark" size={16} filled={view === 'saved'} /> Můj slovník
       <span
-        class="ml-[3px] rounded-full bg-[#e6edf8] px-[7px] py-px text-xs text-[#183452]"
+        class="ml-1 rounded-full bg-[#e6edf8] px-2 py-px text-xs text-[#183452]"
         >{savedCount}</span
       >
     </button>
   </div>
   <div
-    class="flex items-center gap-[7px] text-[#637791] max-[700px]:ml-auto max-[700px]:flex-wrap"
+    class="flex items-center gap-2 text-[#637791] max-[700px]:ml-auto max-[700px]:flex-wrap"
     aria-label="Export slovníku"
   >
     <Icon name="download" size={17} />
     {#each options as option}
       <button
-        class="btn bg-transparent px-[9px] py-1.5 text-[13px] text-[#4268bd]"
+        class="btn bg-transparent px-2 py-1.5 text-[13px] text-[#4268bd]"
         type="button"
         disabled={exportDisabled}
         onclick={() => onExport(option[0])}>{option[1]}</button

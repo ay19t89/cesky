@@ -13,7 +13,11 @@
     | 'check'
     | 'loader';
 
-  let { name, size = 18 }: { name: IconName; size?: number } = $props();
+  let {
+    name,
+    size = 18,
+    filled = false
+  }: { name: IconName; size?: number; filled?: boolean } = $props();
 </script>
 
 <svg
@@ -29,7 +33,15 @@
   class:spin={name === 'loader'}
 >
   {#if name === 'search'}
-    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+    {#if filled}
+      <path
+        d="M10.5 3a7.5 7.5 0 1 0 4.66 13.38L20.78 22 22 20.78l-5.62-5.62A7.5 7.5 0 0 0 10.5 3Zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11Z"
+        fill="currentColor"
+        stroke="none"
+      />
+    {:else}
+      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+    {/if}
   {:else if name === 'book'}
     <path d="M12 7v14" /><path
       d="M3 18a1 1 0 0 1-1-1V5a2 2 0 0 1 2-2h5a3 3 0 0 1 3 3v15a3 3 0 0 0-3-3Z"
@@ -37,7 +49,7 @@
       d="M21 18a1 1 0 0 0 1-1V5a2 2 0 0 0-2-2h-5a3 3 0 0 0-3 3v15a3 3 0 0 1 3-3Z"
     />
   {:else if name === 'bookmark'}
-    <path d="M6 3h12v18l-6-4-6 4V3Z" />
+    <path d="M6 3h12v18l-6-4-6 4V3Z" fill={filled ? 'currentColor' : 'none'} />
   {:else if name === 'bookmark-check'}
     <path d="M6 3h12v18l-6-4-6 4V3Z" /><path d="m9 9 2 2 4-4" />
   {:else if name === 'logout'}
