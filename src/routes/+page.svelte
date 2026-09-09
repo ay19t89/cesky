@@ -13,7 +13,6 @@
     type View
   } from '$lib/components/StickyToolbar.svelte';
   import Icon from '$lib/Icon.svelte';
-  import { SUPABASE_KEY, SUPABASE_URL } from '$lib/config';
   import { compareCzechWords, exportData } from '$lib/exports';
   import { suggest } from '$lib/suggestions';
   import { supabase } from '$lib/supabase';
@@ -61,7 +60,7 @@
   );
 
   function endpoint(): string {
-    return `${SUPABASE_URL}/functions/v1/dictionary`;
+    return '/api/dictionary';
   }
 
   async function dictionaryRequest(
@@ -70,10 +69,7 @@
     signal?: AbortSignal
   ): Promise<ApiResponse> {
     const query = new URLSearchParams({ word: value, action });
-    const response = await fetch(`${endpoint()}?${query}`, {
-      headers: { apikey: SUPABASE_KEY },
-      signal
-    });
+    const response = await fetch(`${endpoint()}?${query}`, { signal });
     const json = (await response.json().catch(() => ({
       error: 'Služba není dostupná. Ověřte nasazení funkce dictionary.'
     }))) as ApiResponse;
