@@ -13,7 +13,7 @@ export {
 } from './export/shared';
 
 function exportFilenameWord(results: Lookup[]): string {
-  return results.length === 1 ? results[0].word : 'slovnik';
+  return results.length === 1 ? results[0].word : 'ceske-pady';
 }
 
 export async function exportData(

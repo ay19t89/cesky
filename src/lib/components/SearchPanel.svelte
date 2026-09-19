@@ -57,25 +57,25 @@
   }
 </script>
 
-<section class="panel p-6 shadow-[0_6px_20px_#152e5510] max-[700px]:p-4">
+<section class="panel p-4 sm:p-6 shadow-[0_6px_20px_#152e5510]">
   <label class="mb-2 block text-sm font-bold" for="word"
     >Které slovo chcete skloňovat?</label
   >
   <form
-    class="flex items-center gap-4 max-[700px]:flex-wrap"
+    class="flex items-center gap-4 max-sm:flex-wrap"
     onsubmit={(event) => {
       event.preventDefault();
       closeSuggestions();
       onSubmit(word);
     }}
   >
-    <span class="max-[700px]:hidden"><Icon name="search-line" /></span>
+    <span class="max-sm:hidden"><Icon name="search-line" /></span>
     <div class="relative min-w-25 flex-1">
       <input
         class={[
-          'w-full rounded-lg border border-[#cbd8e8] bg-white px-3 py-3',
-          'text-xl text-[#182c47] outline-offset-0',
-          'focus:border-[#6f96e8] focus:outline-2 focus:outline-[#86a9f4]'
+          'w-full rounded-lg border border-slate-300 bg-white p-3',
+          'text-xl text-blue-950 outline-offset-0',
+          'focus:border-blue-200 focus:outline-2 focus:outline-blue-200',
         ]}
         id="word"
         bind:value={word}
@@ -132,7 +132,7 @@
       {/if}
     </div>
     <button
-      class="btn max-[700px]:w-full"
+      class="btn max-sm:w-full"
       type="submit"
       disabled={busy || !word.trim()}
     >
@@ -144,7 +144,7 @@
       {/if}
     </button>
   </form>
-  <small class="mt-3 block text-[13px] text-[#6a7a91]"
+  <small class="mt-3 block text-[13px] text-neutral-500"
     >Návrhy běžných a uložených slov, i bez diakritiky. Přihlášení je potřeba
     jen pro osobní slovník.</small
   >

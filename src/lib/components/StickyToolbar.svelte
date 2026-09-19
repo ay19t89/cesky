@@ -57,7 +57,7 @@
 >
   <div class="flex items-center gap-2">
     <button
-      class="tab"
+      class="tab {view === 'lookup' ? '' : 'opacity-80'}"
       type="button"
       aria-pressed={view === 'lookup'}
       onclick={() => onView('lookup')}
@@ -66,7 +66,7 @@
       Slovo
     </button>
     <button
-      class="tab"
+      class="tab {view === 'saved' ? '' : 'opacity-80'}"
       type="button"
       aria-pressed={view === 'saved'}
       onclick={() => onView('saved')}
@@ -81,7 +81,7 @@
   <details bind:open={exportOpen} data-export-menu class="relative ml-auto">
     <summary
       class={[
-        'btn btn-secondary list-none px-3 py-2 text-sm text-[#4268bd]',
+        'btn btn-secondary list-none px-3 py-2 text-xs text-[#4268bd]',
         '[&::-webkit-details-marker]:hidden',
         exportDisabled ? 'cursor-not-allowed opacity-50' : ''
       ]}

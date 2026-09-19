@@ -45,5 +45,8 @@ export default defineConfig({
     tailwindcss(),
     sveltekit(),
     ...(process.env.GITHUB_PAGES === 'true' ? [] : [sites()])
-  ]
+  ],
+  server: {
+    allowedHosts: ['.zrok.io']
+  }
 });

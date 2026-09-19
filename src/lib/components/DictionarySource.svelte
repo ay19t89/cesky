@@ -12,7 +12,7 @@
   }
 </script>
 
-<div class="mx-7 mb-5 max-[700px]:mx-4 max-[700px]:mb-4">
+<div class="mx-7 mb-5 max-sm:mx-4 max-sm:mb-4">
   <div
     class="flex min-h-12 flex-wrap items-center gap-2 rounded-lg border border-[#e0e7f0] px-3 py-2 text-sm"
   >

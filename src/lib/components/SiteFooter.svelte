@@ -3,7 +3,7 @@
 </script>
 
 <footer
-  class="mt-8 flex justify-between gap-5 text-xs text-neutral-500 max-[700px]:flex-wrap"
+  class="mt-8 flex justify-between gap-5 text-xs text-neutral-500 max-sm:flex-wrap"
 >
   <span>České pády · Váš prostor pro češtinu</span>
   <a

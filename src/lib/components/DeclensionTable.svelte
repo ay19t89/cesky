@@ -10,7 +10,7 @@
 <div class="overflow-x-auto">
   <table
     class={[
-      'data-table min-w-160 table-fixed text-sm sm:text-md',
+      'data-table min-w-160 table-fixed text-md sm:text-lg',
       '[&_td:nth-child(2)]:border-l',
       '[&_td:nth-child(2)]:border-neutral-200'
     ]}
@@ -26,7 +26,7 @@
         <th>Pád a otázka</th>
         <th>Jednotné číslo</th>
         <th>Množné číslo</th>
-        <th class="border-l border-[#dbe3ee] text-center">Překlad</th>
+        <th class="border-l border-neutral-200 text-center">Překlad</th>
       </tr>
     </thead>
     <tbody>
@@ -55,7 +55,7 @@
               class="border-l border-neutral-200 text-center align-middle"
               rowspan={caseNames.length}
             >
-              <div class="flex flex-col items-center gap-3 text-sm">
+              <div class="flex flex-col items-center gap-4 text-sm">
                 {#each TRANSLATION_LANGUAGES as language}
                   <a
                     class="inline-flex items-center gap-1 font-bold text-blue-800/90 hover:text-blue-600 no-underline"

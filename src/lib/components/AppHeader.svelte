@@ -26,7 +26,7 @@
     <Icon name="book-open-line" />
     <b>české pády</b>
     <span
-      class="ml-4 border-l border-[#dbe3ee] pl-6 text-xs font-bold tracking-[1.6px] text-[#6a7a91] max-[700px]:hidden"
+      class="ml-4 border-l border-[#dbe3ee] pl-6 text-xs font-bold tracking-[1.6px] text-[#6a7a91] max-sm:hidden"
     >
       OSOBNÍ SLOVNÍK</span
     >

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { checkedAt } from '$lib/dictionary-format';
-  import DeclensionTable from '$lib/components/DeclensionTable.svelte';
   import DeclensionPatternBadges from '$lib/components/DeclensionPatternBadges.svelte';
+  import DeclensionTable from '$lib/components/DeclensionTable.svelte';
   import DictionarySource from '$lib/components/DictionarySource.svelte';
+  import { checkedAt } from '$lib/dictionary-format';
   import Icon from '$lib/Icon.svelte';
   import { genders, type Lookup } from '$lib/types';
 
@@ -31,7 +31,7 @@
 
 <section class="panel mt-7 overflow-hidden" aria-busy={busy}>
   <div
-    class="flex justify-between gap-5 px-7 pt-7 pb-6 max-[700px]:flex-wrap max-[700px]:px-4 max-[700px]:pt-5"
+    class="flex justify-between gap-5 px-7 pt-7 pb-6 max-sm:flex-wrap max-sm:px-4 max-sm:pt-5"
   >
     <div>
       <div class="eyebrow">VÝSLEDEK OVĚŘENÍ</div>
@@ -54,7 +54,7 @@
       {/if}
     </div>
     <div
-      class="flex flex-col items-end justify-center gap-2 max-[700px]:items-start"
+      class="flex flex-col items-end justify-center gap-2 max-sm:items-start"
     >
       <small class="text-xs text-[#64758c] tabular-nums"
         >{checkedAt(result.checkedAt)}</small
