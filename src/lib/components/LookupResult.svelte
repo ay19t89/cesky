@@ -37,15 +37,16 @@
   >
     <div>
       <div class="eyebrow">VÝSLEDEK OVĚŘENÍ</div>
-      <h2 class="mt-2 mb-3 text-[38px] tracking-[-1px]">
+      <h2 class="my-3 text-4xl tracking-[-1px]">
         {result.word}
       </h2>
       <div class="flex flex-wrap gap-2">
         {#each resultGenders as entryGender (entryGender ?? 'unknown')}
           <span
             class="rounded-md border border-[#d7e5ff] bg-[#edf3ff] px-2 py-1 text-[13px] text-[#4268bd]"
-            >{entryGender ? genders[entryGender] : 'Rod neurčen'}</span
           >
+            {entryGender ? genders[entryGender] : 'Rod neurčen'}
+          </span>
         {/each}
         <DeclensionPatternBadges entries={result.ijp.entries} />
       </div>
@@ -58,8 +59,8 @@
     <div
       class="flex flex-col items-end justify-center gap-2 max-sm:items-start"
     >
-      <small class="text-xs text-[#64758c] tabular-nums"
-        >{checkedAt(result.checkedAt)}</small
+      <small class="text-xs text-neutral-500 tabular-nums">
+        {checkedAt(result.checkedAt)}</small
       >
       <button
         class="btn"
