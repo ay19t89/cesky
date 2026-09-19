@@ -13,7 +13,8 @@
     signedIn,
     currentSaved,
     message,
-    onToggleSaved
+    onToggleSaved,
+    onSuggestion
   }: {
     result: Lookup;
     busy: boolean;
@@ -22,6 +23,7 @@
     currentSaved: boolean;
     message: string;
     onToggleSaved: () => void;
+    onSuggestion: (word: string) => void;
   } = $props();
 
   const resultGenders = $derived([
@@ -78,6 +80,6 @@
     </div>
   </div>
 
-  <DictionarySource {result} />
+  <DictionarySource {result} {onSuggestion} />
   <DeclensionTable {result} />
 </section>

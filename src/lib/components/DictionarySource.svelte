@@ -3,7 +3,13 @@
   import { ijpUrlForWord } from '$lib/ijp-url';
   import type { Lookup, Source } from '$lib/types';
 
-  let { result }: { result: Lookup } = $props();
+  let {
+    result,
+    onSuggestion
+  }: {
+    result: Lookup;
+    onSuggestion: (word: string) => void;
+  } = $props();
 
   function sourceStatusLabel(status: Source['status']): string {
     if (status === 'ok') return 'Načteno';
@@ -38,6 +44,20 @@
       >
         {result.ijp.message}
       </span>
+    {/if}
+    {#if result.ijp.suggestions?.length}
+      <div class="flex flex-wrap items-center gap-1 text-xs">
+        <span class="text-[#61738a]">Možná hesla:</span>
+        {#each result.ijp.suggestions as suggestion (suggestion)}
+          <button
+            class="rounded-md border border-[#cbd8ea] px-2 py-1 font-semibold text-blue-700 hover:bg-[#edf3ff]"
+            type="button"
+            onclick={() => onSuggestion(suggestion)}
+          >
+            {suggestion}
+          </button>
+        {/each}
+      </div>
     {/if}
     <small class="ml-auto text-xs text-[#61738a]">
       {sourceStatusLabel(result.ijp.status)}

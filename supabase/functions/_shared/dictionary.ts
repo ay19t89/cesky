@@ -32,6 +32,24 @@ export function validateWord(value: unknown): string {
 export function parseIjp(html: string, word: string): Source {
   const $ = load(html);
   const entries: Paradigm[] = [];
+  const suggestions = [
+    ...new Set(
+      $('#dalsiz a')
+        .map((_, link) => $(link).text().replace(/\s+/g, ' ').trim())
+        .get()
+        .filter((candidate) => {
+          try {
+            validateWord(candidate);
+            return (
+              candidate.toLocaleLowerCase('cs-CZ') !==
+              word.toLocaleLowerCase('cs-CZ')
+            );
+          } catch {
+            return false;
+          }
+        })
+    )
+  ].slice(0, 8);
 
   $('table.para').each((_, table) => {
     const currentTable = $(table);
@@ -99,13 +117,22 @@ export function parseIjp(html: string, word: string): Source {
     }
   });
 
+  const pageText = $('body').text().replace(/\s+/g, ' ');
+  const trafficLimited =
+    /příliš mnoho (?:požadavků|dotazů)|velk(?:ý|é|ému) (?:provoz|zatížení)|zkuste (?:to )?později/iu.test(
+      pageText
+    );
+
   return {
-    status: entries.length ? 'ok' : 'not_found',
+    status: entries.length ? 'ok' : trafficLimited ? 'error' : 'not_found',
     url: `${IJP_BASE}?slovo=${encodeURIComponent(word)}`,
     entries,
     message: entries.length
       ? undefined
-      : 'Příručka nevrátila tabulku skloňování. Ověřte heslo přímo ve zdroji.'
+      : trafficLimited
+        ? 'Příručka je dočasně přetížená. Zkuste hledání později.'
+        : 'Příručka nevrátila tabulku skloňování. Ověřte heslo přímo ve zdroji.',
+    suggestions: suggestions.length ? suggestions : undefined
   };
 }
 
@@ -122,12 +149,15 @@ async function fetchRemote(url: string): Promise<Response> {
   return response;
 }
 
-function failedSource(url: string): Source {
+function failedSource(url: string, cause?: unknown): Source {
+  const detail = cause instanceof Error ? cause.message : '';
   return {
     status: 'error',
     url,
     entries: [],
-    message: 'Zdroj neodpovídá nebo vrátil neplatná data. Zkuste ověření znovu.'
+    message:
+      detail ||
+      'Zdroj neodpovídá nebo vrátil neplatná data. Zkuste ověření znovu.'
   };
 }
 
@@ -136,10 +166,40 @@ export async function fetchIjp(word: string): Promise<Source> {
   return parseIjp(await (await fetchRemote(url)).text(), word);
 }
 
+function combineMissingSources(sources: Source[]): Source {
+  const usable = sources.find((source) => source.status === 'not_found');
+  const base = usable || sources[0];
+  const suggestions = [
+    ...new Set(sources.flatMap((source) => source.suggestions || []))
+  ].slice(0, 8);
+
+  return {
+    ...base,
+    suggestions: suggestions.length ? suggestions : undefined
+  };
+}
+
+async function lookupWithCaseFallback(requested: string): Promise<Source> {
+  const lowercase = requested.toLocaleLowerCase('cs-CZ');
+  const candidates = [...new Set([requested, lowercase])];
+  const attempted: Source[] = [];
+
+  for (const candidate of candidates) {
+    const url = `${IJP_BASE}?slovo=${encodeURIComponent(candidate)}`;
+    const source = await fetchIjp(candidate).catch((cause) =>
+      failedSource(url, cause)
+    );
+    if (source.entries.length) return source;
+    if (source.status === 'error') return source;
+    attempted.push(source);
+  }
+
+  return combineMissingSources(attempted);
+}
+
 export async function lookup(raw: unknown): Promise<Lookup> {
   const requested = validateWord(raw);
-  const url = `${IJP_BASE}?slovo=${encodeURIComponent(requested)}`;
-  const ijp = await fetchIjp(requested).catch(() => failedSource(url));
+  const ijp = await lookupWithCaseFallback(requested);
   const word = ijp.entries[0]?.lemma || requested;
 
   return {

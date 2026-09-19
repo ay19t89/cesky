@@ -55,7 +55,7 @@ const {
   exportRows,
   headers
 } = await import('../.test-build/exports.mjs');
-const { parseIjp, validateWord } =
+const { lookup, parseIjp, validateWord } =
   await import('../.test-build/server/dictionary.mjs');
 const { findLatestSavedId, sortSavedWords } =
   await import('../.test-build/saved-word-order.mjs');
@@ -109,6 +109,30 @@ assert.deepEqual(parsed.entries[0].plural[1], ['moří']);
 assert.equal(validateWord('  déšť  '), 'déšť');
 assert.throws(() => validateWord('dvě slova'));
 assert.throws(() => validateWord('123'));
+
+const suggested = parseIjp(
+  `<div id="dalsiz">
+    <a href="?id=Baffinovo">Baffinovo <span>moře</span></a>
+    <a href="?id=more">moře</a>
+    <a href="?id=mor">mor</a>
+  </div>`,
+  'MORE'
+);
+assert.equal(suggested.status, 'not_found');
+assert.deepEqual(suggested.suggestions, ['moře', 'mor']);
+
+const originalFetch = globalThis.fetch;
+const requestedUrls = [];
+globalThis.fetch = async (url) => {
+  requestedUrls.push(String(url));
+  return new Response(String(url).includes('MORE') ? '<main></main>' : ijpHtml);
+};
+const lowercaseFallback = await lookup('MORE');
+assert.equal(lowercaseFallback.word, 'moře');
+assert.equal(lowercaseFallback.requested, 'MORE');
+assert.equal(requestedUrls.length, 2);
+assert.ok(requestedUrls[1].includes('more'));
+globalThis.fetch = originalFetch;
 
 const savedRows = [
   { id: '1', word: 'žena', updated_at: '2026-09-01T10:00:00Z' },

@@ -19,6 +19,7 @@ export type Source = {
   url: string;
   entries: Paradigm[];
   message?: string;
+  suggestions?: string[];
 };
 
 export type Lookup = {

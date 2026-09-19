@@ -32,7 +32,7 @@
   } from '$lib/suggestions';
   import { type Gender, type Lookup, type Saved } from '$lib/types';
   import { registerLookup } from '$lib/webmcp';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
 
   const auth = createPageAuth();
   let word = $state('');
@@ -52,8 +52,34 @@
   let savedOrder = $state<SavedWordOrder>('recent');
   let learnedSuggestions = $state.raw<string[]>([]);
   let requestId = $state(0);
+  let savedForUser = $state<string | null>(null);
   let suggestionTimer = $state<ReturnType<typeof setTimeout> | undefined>();
   let suggestionRequest = $state<AbortController | undefined>();
+  let savedLoad: { userId: string; promise: Promise<void> } | undefined;
+
+  function savedLookup(value: string): Lookup | null {
+    if (!auth.session) return null;
+    const normalized = value.normalize('NFC').toLocaleLowerCase('cs-CZ');
+    const row = saved.find(
+      (item) =>
+        item.word.normalize('NFC').toLocaleLowerCase('cs-CZ') === normalized
+    );
+    if (!row?.result.ijp.entries.length) return null;
+    return {
+      ...row.result,
+      requested: value.trim(),
+      checkedAt: row.updated_at
+    };
+  }
+
+  async function scrollAfterFound(): Promise<void> {
+    await tick();
+    if (window.scrollY > window.innerHeight * 0.25) return;
+    window.scrollBy({
+      top: Math.round(window.innerHeight * 0.1),
+      behavior: 'smooth'
+    });
+  }
 
   const latestSavedId = $derived(findLatestSavedId(saved));
 
@@ -97,22 +123,31 @@
     }, 650);
   }
 
-  async function loadPersonalDictionary(): Promise<void> {
-    if (!auth.session) return;
+  function loadPersonalDictionary(): Promise<void> {
+    if (!auth.session) return Promise.resolve();
     const userId = auth.session.user.id;
-    savedBusy = true;
-    savedError = '';
-    try {
-      const rows = await loadSavedWords();
-      if (auth.session?.user.id === userId) {
-        saved = rows;
+    if (savedLoad?.userId === userId) return savedLoad.promise;
+    const promise = (async () => {
+      savedBusy = true;
+      savedError = '';
+      try {
+        const rows = await loadSavedWords();
+        if (auth.session?.user.id === userId) {
+          saved = rows;
+          savedForUser = userId;
+        }
+      } catch {
+        savedError =
+          'Slovník nelze načíst. Zkontrolujte připojení a nastavení Supabase.';
+      } finally {
+        savedBusy = false;
       }
-    } catch {
-      savedError =
-        'Slovník nelze načíst. Zkontrolujte připojení a nastavení Supabase.';
-    } finally {
-      savedBusy = false;
-    }
+    })();
+    const trackedPromise = promise.finally(() => {
+      if (savedLoad?.promise === trackedPromise) savedLoad = undefined;
+    });
+    savedLoad = { userId, promise: trackedPromise };
+    return trackedPromise;
   }
 
   async function lookupWord(
@@ -129,11 +164,18 @@
     view = 'lookup';
 
     try {
-      const data = await requestDictionary(value.trim());
+      if (auth.session && savedForUser !== auth.session.user.id) {
+        await loadPersonalDictionary();
+      }
+      const data =
+        savedLookup(value) || (await requestDictionary(value.trim()));
       if (activeRequest === requestId) {
         result = data;
         word = data.word;
         if (updateHistory) pushLookupWord(data.word);
+        if (updateHistory && data.ijp.entries.length) {
+          void scrollAfterFound();
+        }
       }
       if (!data.ijp.entries.length) return data;
       learnedSuggestions = rememberSuggestion(data.word);
@@ -256,6 +298,7 @@
       if (changed) {
         currentSaved = false;
         saved = [];
+        savedForUser = null;
         message = '';
         if (session) void loadPersonalDictionary();
       }
@@ -332,6 +375,8 @@
         {currentSaved}
         {message}
         onToggleSaved={() => void toggleCurrentWordSaved()}
+        onSuggestion={(suggestion) =>
+          void lookupWord(suggestion).catch(() => {})}
       />
     {:else}
       <LookupEmptyState />
