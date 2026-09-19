@@ -31,9 +31,9 @@
   ]);
 </script>
 
-<section class="panel mt-7 overflow-hidden" aria-busy={busy}>
+<section class="panel mt-6 overflow-hidden" aria-busy={busy}>
   <div
-    class="flex justify-between gap-5 px-7 pt-7 pb-6 max-sm:flex-wrap max-sm:px-4 max-sm:pt-5"
+    class="flex justify-between gap-4 p-6 max-sm:flex-wrap max-sm:px-4 max-sm:pt-5"
   >
     <div>
       <div class="eyebrow">VÝSLEDEK OVĚŘENÍ</div>
@@ -57,7 +57,7 @@
       {/if}
     </div>
     <div
-      class="flex flex-col items-end justify-center gap-2 max-sm:items-start"
+      class="flex flex-col absolute right-3 items-end justify-center gap-2"
     >
       <small class="text-xs text-neutral-500 tabular-nums">
         {checkedAt(result.checkedAt)}</small
