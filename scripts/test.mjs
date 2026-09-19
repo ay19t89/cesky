@@ -60,8 +60,12 @@ const { lookup, parseIjp, validateWord } =
 const { findLatestSavedId, sortSavedWords } =
   await import('../.test-build/saved-word-order.mjs');
 const { suggest } = await import('../.test-build/suggestions.mjs');
-const { canonicalPatterns, inferDeclensionPattern, patternsForGender } =
-  await import('../.test-build/declension-patterns.mjs');
+const {
+  canonicalPatterns,
+  inferDeclensionPattern,
+  inferDeclensionPatterns,
+  patternsForGender
+} = await import('../.test-build/declension-patterns.mjs');
 
 const forms = Array.from({ length: 7 }, (_, index) => [`tvar${index + 1}`]);
 const sourceUrl = 'https://prirucka.ujc.cas.cz/?slovo=mo%C5%99e';
@@ -176,6 +180,33 @@ for (const pattern of canonicalPatterns) {
   assert.equal(match?.score, 100);
 }
 assert.deepEqual(patternsForGender('N'), ['město', 'moře', 'kuře', 'stavení']);
+const postelPatterns = inferDeclensionPatterns({
+  lemma: 'postel',
+  gender: 'F',
+  singular: [
+    ['postel'],
+    ['postele'],
+    ['posteli'],
+    ['postel'],
+    ['posteli'],
+    ['posteli'],
+    ['postelí']
+  ],
+  plural: [
+    ['postele'],
+    ['postelí'],
+    ['postelím'],
+    ['postele'],
+    ['postele'],
+    ['postelích'],
+    ['postelemi']
+  ]
+});
+assert.deepEqual(
+  postelPatterns.map((match) => match.name),
+  ['kost', 'píseň']
+);
+assert.equal(postelPatterns[0].confidence, 'low');
 assert.equal(
   inferDeclensionPattern({
     lemma: 'radost',

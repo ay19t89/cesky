@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    inferDeclensionPattern,
+    inferDeclensionPatterns,
     type DeclensionPatternMatch
   } from '$lib/declension-patterns';
   import type { Paradigm } from '$lib/types';
@@ -9,7 +9,7 @@
 
   const matches = $derived.by(() => {
     const inferred = entries
-      .map(inferDeclensionPattern)
+      .flatMap((entry) => inferDeclensionPatterns(entry, 2))
       .filter((match): match is DeclensionPatternMatch => Boolean(match))
       .sort((left, right) => right.score - left.score);
 
@@ -20,20 +20,36 @@
     );
   });
 
-  function label(match: DeclensionPatternMatch): string {
+  function confidentLabel(match: DeclensionPatternMatch): string {
     if (match.confidence === 'high') return `Vzor: ${match.name}`;
-    if (match.confidence === 'medium')
-      return `Pravděpodobný vzor: ${match.name}`;
-    return `Možný vzor: ${match.name}`;
+    return `Pravděpodobný vzor: ${match.name}`;
   }
+
+  const uncertain = $derived(matches[0]?.confidence === 'low');
+  const title = $derived(
+    matches
+      .map(
+        (match) =>
+          `${match.name}: ${match.score} % z ${match.comparedForms} porovnaných tvarů`
+      )
+      .join('; ')
+  );
 </script>
 
-{#each matches as match (match.name)}
+{#if uncertain}
   <span
     class="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[13px]
       text-emerald-800"
-    title={`Shoda s kanonickým vzorem: ${match.score} % z ${match.comparedForms} porovnaných tvarů.`}
+    {title}
   >
-    {label(match)}
+    Možný vzor: {matches.map((match) => match.name).join(', ')}
   </span>
-{/each}
+{:else if matches[0]}
+  <span
+    class="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[13px]
+      text-emerald-800"
+    {title}
+  >
+    {confidentLabel(matches[0])}
+  </span>
+{/if}

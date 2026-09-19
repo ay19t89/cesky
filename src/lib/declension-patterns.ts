@@ -350,9 +350,21 @@ function lemmaEndingScore(actual: string, canonical: string): number {
   return 0;
 }
 
+function patternEndingPrior(
+  paradigm: Paradigm,
+  pattern: CanonicalPattern
+): number {
+  if (paradigm.gender !== 'F') return 0;
+  const lemma = normalize(paradigm.lemma);
+  if (/[aá]$/u.test(lemma)) return pattern.name === 'žena' ? 1 : -1;
+  if (/[eě]$/u.test(lemma)) return pattern.name === 'růže' ? 1 : -1;
+  return pattern.name === 'kost' || pattern.name === 'píseň' ? 1 : -1;
+}
+
 function scorePattern(paradigm: Paradigm, pattern: CanonicalPattern) {
-  let score = lemmaEndingScore(paradigm.lemma, pattern.lemma);
-  let possible = 1;
+  const endingPrior = patternEndingPrior(paradigm, pattern);
+  let score = lemmaEndingScore(paradigm.lemma, pattern.lemma) + endingPrior;
+  let possible = paradigm.gender === 'F' ? 2 : 1;
   let comparedForms = 0;
 
   for (const number of ['singular', 'plural'] as const) {
@@ -383,34 +395,39 @@ function confidenceFor(
   margin: number,
   comparedForms: number
 ): DeclensionPatternConfidence {
-  if (score >= 0.78 && margin >= 0.08 && comparedForms >= 8) return 'high';
-  if (score >= 0.6 && margin >= 0.035 && comparedForms >= 5) return 'medium';
+  if (score >= 0.82 && margin >= 0.08 && comparedForms >= 8) return 'high';
+  if (score >= 0.67 && margin >= 0.035 && comparedForms >= 5) return 'medium';
   return 'low';
 }
 
 export function inferDeclensionPattern(
   paradigm: Paradigm
 ): DeclensionPatternMatch | null {
-  if (!paradigm.gender) return null;
+  return inferDeclensionPatterns(paradigm, 1)[0] || null;
+}
+
+export function inferDeclensionPatterns(
+  paradigm: Paradigm,
+  limit = 2
+): DeclensionPatternMatch[] {
+  if (!paradigm.gender) return [];
 
   const candidates = canonicalPatterns
     .filter((pattern) => pattern.gender === paradigm.gender)
     .map((pattern) => ({ ...pattern, ...scorePattern(paradigm, pattern) }))
     .sort((left, right) => right.score - left.score);
-  const best = candidates[0];
-  if (!best || best.comparedForms < 3) return null;
+  if (!candidates[0] || candidates[0].comparedForms < 3) return [];
 
-  const runnerUpScore = candidates[1]?.score ?? 0;
-  return {
-    name: best.name,
-    score: Math.round(best.score * 100),
+  return candidates.slice(0, Math.max(1, limit)).map((candidate, index) => ({
+    name: candidate.name,
+    score: Math.round(candidate.score * 100),
     confidence: confidenceFor(
-      best.score,
-      best.score - runnerUpScore,
-      best.comparedForms
+      candidate.score,
+      candidate.score - (candidates[index + 1]?.score ?? 0),
+      candidate.comparedForms
     ),
-    comparedForms: best.comparedForms
-  };
+    comparedForms: candidate.comparedForms
+  }));
 }
 
 export function patternsForGender(gender: Gender): string[] {
