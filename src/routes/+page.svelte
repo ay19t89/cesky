@@ -1,44 +1,47 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { pushState, replaceState } from '$app/navigation';
-  import type { Session } from '@supabase/supabase-js';
   import AppHeader from '$lib/components/AppHeader.svelte';
   import LoginDialog from '$lib/components/LoginDialog.svelte';
   import LookupEmptyState from '$lib/components/LookupEmptyState.svelte';
   import LookupResult from '$lib/components/LookupResult.svelte';
   import SavedDictionary from '$lib/components/SavedDictionary.svelte';
   import SearchPanel from '$lib/components/SearchPanel.svelte';
+  import SiteFooter from '$lib/components/SiteFooter.svelte';
   import StickyToolbar, {
     type ExportFormat,
     type View
   } from '$lib/components/StickyToolbar.svelte';
-  import Icon from '$lib/Icon.svelte';
-  import { compareCzechWords, exportData } from '$lib/exports';
-  import { suggest } from '$lib/suggestions';
-  import { supabase } from '$lib/supabase';
-  import { registerLookup } from '$lib/webmcp';
+  import { requestDictionary } from '$lib/dictionary-api';
+  import { exportData } from '$lib/exports';
+  import {
+    clearLookupWord,
+    getLookupWord,
+    openSavedWord,
+    pushLookupWord
+  } from '$lib/lookup-history';
+  import { createPageAuth } from '$lib/page-auth.svelte';
+  import {
+    findLatestSavedId,
+    sortSavedWords,
+    type SavedWordOrder
+  } from '$lib/saved-word-order';
+  import { loadSavedWords, removeWord, saveWord } from '$lib/saved-words';
+  import {
+    loadLearnedSuggestions,
+    rememberSuggestion,
+    suggest
+  } from '$lib/suggestions';
   import { type Gender, type Lookup, type Saved } from '$lib/types';
+  import { registerLookup } from '$lib/webmcp';
+  import { onMount } from 'svelte';
 
-  type ApiResponse = Lookup & {
-    suggestions?: string[];
-    error?: string;
-    message?: string;
-  };
-
-  let session = $state<Session | null>(null);
-  let authReady = $state(false);
-  let loginOpen = $state(false);
-  let email = $state('');
-  let password = $state('');
-  let authError = $state('');
-  let authBusy = $state(false);
+  const auth = createPageAuth();
   let word = $state('');
-  let suggestions = $state<string[]>([]);
-  let result = $state<Lookup | null>(null);
+  let suggestions = $state.raw<string[]>([]);
+  let result = $state.raw<Lookup | null>(null);
   let busy = $state(false);
   let error = $state('');
   let message = $state('');
-  let saved = $state<Saved[]>([]);
+  let saved = $state.raw<Saved[]>([]);
   let savedBusy = $state(false);
   let savedError = $state('');
   let saving = $state(false);
@@ -46,79 +49,62 @@
   let exporting = $state(false);
   let view = $state<View>('lookup');
   let gender = $state<'all' | Gender>('all');
+  let savedOrder = $state<SavedWordOrder>('recent');
+  let learnedSuggestions = $state.raw<string[]>([]);
   let requestId = $state(0);
   let suggestionTimer = $state<ReturnType<typeof setTimeout> | undefined>();
+  let suggestionRequest = $state<AbortController | undefined>();
+
+  const latestSavedId = $derived(findLatestSavedId(saved));
 
   const visibleSaved = $derived.by(() =>
-    saved
-      .filter(
+    sortSavedWords(
+      saved.filter(
         (item) =>
           gender === 'all' ||
           item.result.ijp.entries.some((entry) => entry.gender === gender)
-      )
-      .sort((left, right) => compareCzechWords(left.word, right.word))
+      ),
+      savedOrder
+    )
   );
 
-  function endpoint(): string {
-    return '/api/dictionary';
-  }
-
-  async function dictionaryRequest(
-    value: string,
-    action = 'lookup',
-    signal?: AbortSignal
-  ): Promise<ApiResponse> {
-    const query = new URLSearchParams({ word: value, action });
-    const response = await fetch(`${endpoint()}?${query}`, { signal });
-    const json = (await response.json().catch(() => ({
-      error: 'Služba není dostupná. Ověřte nasazení funkce dictionary.'
-    }))) as ApiResponse;
-
-    if (!response.ok) {
-      throw new Error(json.error || json.message || 'Ověření se nezdařilo.');
-    }
-    return json;
-  }
-
   function updateSuggestions(): void {
-    const local = suggest(
-      word,
-      saved.map((item) => item.word)
-    );
+    const local = suggest(word, [
+      ...saved.map((item) => item.word),
+      ...learnedSuggestions
+    ]);
     suggestions = local;
     if (suggestionTimer) clearTimeout(suggestionTimer);
+    suggestionRequest?.abort();
     if (word.trim().length < 3) return;
 
     const value = word.trim();
     suggestionTimer = setTimeout(() => {
-      dictionaryRequest(value, 'suggest')
+      const controller = new AbortController();
+      suggestionRequest = controller;
+      requestDictionary(value, 'suggest', controller.signal)
         .then((data) => {
+          if (word.trim() !== value) return;
           suggestions = [
             ...new Set([...(data.suggestions || []), ...local])
           ].slice(0, 8);
         })
-        .catch(() => {});
+        .catch((cause) => {
+          if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
+            suggestions = local;
+          }
+        });
     }, 650);
   }
 
   async function refresh(): Promise<void> {
-    if (!session) return;
-    const userId = session.user.id;
+    if (!auth.session) return;
+    const userId = auth.session.user.id;
     savedBusy = true;
     savedError = '';
     try {
-      const rows: Saved[] = [];
-      for (let offset = 0; ; offset += 500) {
-        const response = await supabase
-          .from('czech_words')
-          .select('id,word,result,updated_at')
-          .order('updated_at', { ascending: false })
-          .range(offset, offset + 499);
-        if (response.error) throw response.error;
-        rows.push(...(response.data as Saved[]));
-        if (response.data.length < 500) break;
-      }
-      if (session?.user.id === userId) {
+      const rows = await loadSavedWords();
+      if (auth.session?.user.id === userId) {
         saved = rows;
       }
     } catch {
@@ -129,7 +115,7 @@
     }
   }
 
-  async function check(value = word): Promise<Lookup> {
+  async function check(value = word, updateHistory = true): Promise<Lookup> {
     if (!value.trim()) throw new Error('Zadejte slovo.');
 
     const activeRequest = ++requestId;
@@ -140,27 +126,23 @@
     view = 'lookup';
 
     try {
-      const data = await dictionaryRequest(value.trim());
+      const data = await requestDictionary(value.trim());
       if (activeRequest === requestId) {
         result = data;
         word = data.word;
+        if (updateHistory) pushLookupWord(data.word);
       }
       if (!data.ijp.entries.length) return data;
-      const activeSession = session;
+      learnedSuggestions = rememberSuggestion(data.word);
+      const activeSession = auth.session;
       if (!activeSession) return data;
 
-      const response = await supabase.from('czech_words').upsert(
-        {
-          word: data.word,
-          result: data,
-          user_id: activeSession.user.id,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: 'user_id,word' }
-      );
-      if (response.error) {
+      try {
+        await saveWord(activeSession.user.id, data);
+      } catch {
         error = 'Slovo bylo ověřeno, ale nepodařilo se ho automaticky uložit.';
-      } else {
+      }
+      if (!error) {
         currentSaved = true;
         message = 'Uloženo do slovníku.';
         await refresh();
@@ -177,30 +159,10 @@
     }
   }
 
-  async function signIn(event: SubmitEvent): Promise<void> {
-    event.preventDefault();
-    authBusy = true;
-    authError = '';
-    try {
-      const response = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password
-      });
-      if (response.error) throw response.error;
-      password = '';
-      loginOpen = false;
-    } catch {
-      authError =
-        'Přihlášení se nezdařilo. Zkontrolujte e-mail, heslo a připojení.';
-    } finally {
-      authBusy = false;
-    }
-  }
-
   async function toggleSaved(): Promise<void> {
     if (!result) return;
-    if (!session) {
-      loginOpen = true;
+    if (!auth.session) {
+      auth.loginOpen = true;
       return;
     }
     saving = true;
@@ -208,25 +170,11 @@
     message = '';
     try {
       if (currentSaved) {
-        const response = await supabase
-          .from('czech_words')
-          .delete()
-          .eq('user_id', session.user.id)
-          .eq('word', result.word);
-        if (response.error) throw response.error;
+        await removeWord(auth.session.user.id, result.word);
         currentSaved = false;
         message = 'Odebráno ze slovníku.';
       } else {
-        const response = await supabase.from('czech_words').upsert(
-          {
-            word: result.word,
-            result,
-            user_id: session.user.id,
-            updated_at: new Date().toISOString()
-          },
-          { onConflict: 'user_id,word' }
-        );
-        if (response.error) throw response.error;
+        await saveWord(auth.session.user.id, result);
         currentSaved = true;
         message = 'Uloženo do slovníku.';
       }
@@ -250,26 +198,19 @@
   }
 
   function openSaved(row: Saved): void {
-    const currentUrl = new URL(window.location.href);
-    replaceState(currentUrl, { view: 'saved' });
-    currentUrl.searchParams.set('slovo', row.word);
-    pushState(currentUrl, { view: 'lookup', word: row.word });
+    openSavedWord(row.word);
     showSaved(row);
   }
 
   function selectView(nextView: View): void {
     if (nextView === 'saved') {
-      const currentUrl = new URL(window.location.href);
-      if (currentUrl.searchParams.has('slovo')) {
-        currentUrl.searchParams.delete('slovo');
-        pushState(currentUrl, { view: 'saved' });
-      }
+      clearLookupWord();
     }
     view = nextView;
   }
 
-  function restoreHistory(state?: { view?: string }): void {
-    const value = new URL(window.location.href).searchParams.get('slovo');
+  async function restoreHistory(state?: { view?: string }): Promise<void> {
+    const value = getLookupWord();
     const matching = value
       ? saved.find((row) => row.word === value)
       : undefined;
@@ -277,8 +218,12 @@
       showSaved(matching);
       return;
     }
+    if (value) {
+      await check(value, false).catch(() => {});
+      return;
+    }
     view = state?.view === 'saved' ? 'saved' : 'lookup';
-    if (view === 'saved') result = null;
+    result = null;
   }
 
   async function runExport(format: ExportFormat): Promise<void> {
@@ -301,57 +246,51 @@
     }
   }
 
-  async function signOut(): Promise<void> {
-    const response = await supabase.auth.signOut();
-    if (response.error) error = 'Odhlášení se nezdařilo. Zkuste to znovu.';
-  }
-
   onMount(() => {
-    let cleanupWebMcp = () => {};
-    const popstate = (event: PopStateEvent) => restoreHistory(event.state);
-    window.addEventListener('popstate', popstate);
-
-    supabase.auth.getSession().then(({ data }) => {
-      session = data.session;
-      authReady = true;
-      if (session) void refresh();
-    });
-    const { data } = supabase.auth.onAuthStateChange((_, nextSession) => {
-      const changed = session?.user.id !== nextSession?.user.id;
-      session = nextSession;
-      authReady = true;
+    let initialLookupStarted = false;
+    learnedSuggestions = loadLearnedSuggestions();
+    const cleanupAuth = auth.initialize((session, changed) => {
       if (changed) {
         currentSaved = false;
         saved = [];
         message = '';
         if (session) void refresh();
       }
+      const initialWord = getLookupWord();
+      if (initialWord && !initialLookupStarted) {
+        initialLookupStarted = true;
+        void check(initialWord, false).catch(() => {});
+      }
     });
-    cleanupWebMcp = registerLookup(check);
+    const cleanupWebMcp = registerLookup(check);
 
     return () => {
-      data.subscription.unsubscribe();
+      cleanupAuth();
       cleanupWebMcp();
-      window.removeEventListener('popstate', popstate);
       if (suggestionTimer) clearTimeout(suggestionTimer);
+      suggestionRequest?.abort();
     };
   });
 </script>
+
+<svelte:window onpopstate={(event) => void restoreHistory(event.state)} />
 
 <svelte:head>
   <title>České pády</title>
 </svelte:head>
 
 <AppHeader
-  signedIn={Boolean(session)}
-  {authReady}
-  onLogin={() => (loginOpen = true)}
-  onLogout={signOut}
+  signedIn={Boolean(auth.session)}
+  authReady={auth.ready}
+  onLogin={() => (auth.loginOpen = true)}
+  onLogout={async () => {
+    if (!(await auth.signOut())) {
+      error = 'Odhlášení se nezdařilo. Zkuste to znovu.';
+    }
+  }}
 />
 
-<main
-  class="mx-auto max-w-[1200px] px-7 pt-12 pb-16 max-[700px]:px-[18px] max-[700px]:pt-[30px] max-[700px]:pb-[55px]"
->
+<main class="mx-auto max-w-300 px-8 pt-6 pb-16 sm:px-4 sm:pb-14">
   <StickyToolbar
     {view}
     savedCount={saved.length}
@@ -364,11 +303,11 @@
 
   <div class="eyebrow">SLOVO PO SLOVU</div>
   <h1
-    class="mt-[9px] text-[38px] leading-[1.2] tracking-[-1.5px] max-[700px]:text-[30px]"
+    class="mt-2 text-4xl leading-[1.2] tracking-[-1.5px] sm:text-3xl"
   >
     Čeština ve všech pádech.
   </h1>
-  <p class="mt-0.5 mb-[22px] text-[#52647c]">
+  <p class="mt-1 mb-6 text-[#52647c]">
     Vyhledejte podstatné jméno a uložte si jeho tvary.
   </p>
 
@@ -388,7 +327,7 @@
         {result}
         {busy}
         {saving}
-        signedIn={Boolean(session)}
+        signedIn={Boolean(auth.session)}
         {currentSaved}
         {message}
         onToggleSaved={() => void toggleSaved()}
@@ -398,36 +337,29 @@
     {/if}
   {:else}
     <SavedDictionary
-      email={session?.user.email}
+      email={auth.session?.user.email}
       busy={savedBusy}
       error={savedError}
       rows={visibleSaved}
+      {latestSavedId}
       {gender}
+      order={savedOrder}
       onGender={(nextGender) => (gender = nextGender)}
+      onOrder={(nextOrder) => (savedOrder = nextOrder)}
       onRefresh={() => void refresh()}
       onOpen={openSaved}
     />
   {/if}
-  <footer
-    class="mt-8 flex justify-between gap-5 text-xs text-[#738398] max-[700px]:flex-wrap"
-  >
-    <span>České pády · Váš prostor pro češtinu</span><a
-      href="https://prirucka.ujc.cas.cz/"
-      target="_blank"
-      rel="noreferrer"
-      class="inline-flex items-center gap-1 text-[#52647c] no-underline"
-      >ÚJČ AV ČR <Icon name="arrow-up-right" size={12} /></a
-    >
-  </footer>
+  <SiteFooter />
 </main>
 
-{#if loginOpen}
+{#if auth.loginOpen}
   <LoginDialog
-    bind:email
-    bind:password
-    busy={authBusy}
-    error={authError}
-    onClose={() => (loginOpen = false)}
-    onSubmit={signIn}
+    bind:email={auth.email}
+    bind:password={auth.password}
+    busy={auth.busy}
+    error={auth.error}
+    onClose={() => (auth.loginOpen = false)}
+    onSubmit={auth.signIn}
   />
 {/if}

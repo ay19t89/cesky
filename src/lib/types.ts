@@ -21,34 +21,11 @@ export type Source = {
   message?: string;
 };
 
-export type TranslationLanguage = 'rusky' | 'anglicky';
-
-export type TranslationPhrase = {
-  source: string;
-  target: string;
-};
-
-export type TranslationSense = {
-  meaning?: string;
-  translations: string[];
-  phrases: TranslationPhrase[];
-};
-
-export type TranslationSource = {
-  status: 'ok' | 'not_found' | 'error';
-  url: string;
-  senses: TranslationSense[];
-  message?: string;
-};
-
-export type Translations = Record<TranslationLanguage, TranslationSource>;
-
 export type Lookup = {
   word: string;
   requested: string;
   checkedAt: string;
   ijp: Source;
-  translations?: Translations;
 };
 
 export type Saved = {

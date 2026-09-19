@@ -5,6 +5,7 @@ node_modules
 /dist
 /.test-build
 /supabase/.temp
+/.openai
 .env
 .env.*
 !.env.example

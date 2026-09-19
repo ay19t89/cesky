@@ -43,14 +43,30 @@
     filter: brightness(0.96);
   }
 
-  svg {
+  svg,
+  i[class^='ri-'] {
     flex: 0 0 auto;
+  }
+
+  i[class^='ri-'] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  i[class^='ri-']::before {
+    display: block;
+    line-height: 1;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#4268bd] px-[18px] py-[11px] font-bold text-white;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2;
+    @apply rounded-lg border border-transparent bg-[#4268bd] p-3;
+    @apply font-bold text-white;
   }
 
   .btn-secondary {
@@ -58,7 +74,9 @@
   }
 
   .tab {
-    @apply relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent bg-[#4268bd] px-3 py-1 text-sm font-bold text-white;
+    @apply relative inline-flex cursor-pointer items-center justify-center gap-2;
+    @apply rounded-lg border border-transparent bg-[#4268bd] px-3 py-1;
+    @apply text-sm font-bold text-white;
   }
 
   .panel {
@@ -70,7 +88,7 @@
   }
 
   .notice {
-    @apply my-3 flex items-center gap-2 rounded-[7px] bg-[#fff8e7] px-4 py-3 text-sm text-[#795d21];
+    @apply my-3 flex items-center gap-2 rounded-lg bg-[#fff8e7] px-4 py-3 text-sm text-[#795d21];
   }
 
   .notice-error {
@@ -82,11 +100,12 @@
   }
 
   .data-table th {
-    @apply border-b border-[#dbe3ee] bg-[#f4f7fc] px-3.5 py-[11px] text-left text-[13px] font-semibold text-[#52647c];
+    @apply border-b border-[#dbe3ee] bg-[#f4f7fc] px-4 py-3 text-left;
+    @apply text-sm font-semibold text-[#52647c];
   }
 
   .data-table td {
-    @apply border-b border-[#edf1f6] px-3.5 py-[11px] align-top;
+    @apply border-b border-[#edf1f6] px-4 py-3 align-top;
   }
 
   .data-table tbody tr:last-child td {
@@ -98,7 +117,7 @@
   }
 
   .saved-table tbody td {
-    @apply py-[13px] transition-colors duration-150;
+    @apply py-3 transition-colors duration-150;
   }
 
   .saved-table tbody tr:hover td,
@@ -108,35 +127,19 @@
 
   .saved-table tbody tr:hover td:first-child,
   .saved-table tbody tr:focus-visible td:first-child {
-    @apply rounded-l-[10px];
+    @apply rounded-l-lg;
   }
 
   .saved-table tbody tr:hover td:last-child,
   .saved-table tbody tr:focus-visible td:last-child {
-    @apply rounded-r-[10px];
+    @apply rounded-r-lg;
   }
 
   .saved-table th:nth-child(4) {
-    @apply min-w-[180px] text-center;
+    @apply min-w-44 text-center;
   }
 
   .saved-table td:nth-child(4) {
-    @apply max-w-[240px];
-  }
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spin {
-    animation: none;
+    @apply max-w-60;
   }
 }

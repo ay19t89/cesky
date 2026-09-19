@@ -1,15 +1,19 @@
 <script lang="ts">
   import Icon from '$lib/Icon.svelte';
-  import { translationUrl } from '$lib/translation';
-  import { genders, type Gender, type Saved } from '$lib/types';
+  import SavedWordsTable from '$lib/components/SavedWordsTable.svelte';
+  import type { SavedWordOrder } from '$lib/saved-word-order';
+  import type { Gender, Saved } from '$lib/types';
 
   let {
     email,
     busy,
     error,
     rows,
+    latestSavedId,
     gender,
+    order,
     onGender,
+    onOrder,
     onRefresh,
     onOpen
   }: {
@@ -17,8 +21,11 @@
     busy: boolean;
     error: string;
     rows: Saved[];
+    latestSavedId: string | undefined;
     gender: 'all' | Gender;
+    order: SavedWordOrder;
     onGender: (gender: 'all' | Gender) => void;
+    onOrder: (order: SavedWordOrder) => void;
     onRefresh: () => void;
     onOpen: (row: Saved) => void;
   } = $props();
@@ -33,32 +40,60 @@
 </script>
 
 <section class="panel mt-7 overflow-hidden">
-  <div class="flex items-center justify-between px-7 pt-5">
+  <div class="flex items-start justify-between gap-4 px-7 pt-5">
     <div>
       <h2 class="text-[23px] tracking-[-0.5px]">Můj slovník</h2>
-      <p class="mt-1.5 mb-0 text-[13px] text-[#64758c]">
+      <p class="mt-2 mb-0 text-[13px] text-[#64758c]">
         {email || 'Přihlaste se pro vlastní slovník.'}
       </p>
     </div>
-    <button
-      class="btn btn-secondary h-[50px] w-[50px] p-0"
-      type="button"
-      aria-label="Obnovit slovník"
-      disabled={busy || !email}
-      onclick={onRefresh}><Icon name="refresh" size={22} /></button
-    >
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      <div
+        class="flex rounded-lg border border-[#dbe3ee] bg-[#f4f7fc] p-1"
+        aria-label="Řazení slov"
+      >
+        <button
+          class="btn min-h-9 px-3 py-1 text-xs {order === 'alphabetical'
+            ? ''
+            : 'btn-secondary border-transparent! bg-transparent!'}"
+          type="button"
+          aria-pressed={order === 'alphabetical'}
+          onclick={() => onOrder('alphabetical')}
+        >
+          <Icon name="sort-asc" /> Abecedně
+        </button>
+        <button
+          class="btn min-h-9 px-3 py-1 text-xs {order === 'recent'
+            ? ''
+            : 'btn-secondary border-transparent! bg-transparent!'}"
+          type="button"
+          aria-pressed={order === 'recent'}
+          onclick={() => onOrder('recent')}
+        >
+          <Icon name="time-line" /> Nejnovější
+        </button>
+      </div>
+      <button
+        class="btn btn-secondary size-11 p-0"
+        type="button"
+        aria-label="Obnovit slovník"
+        disabled={busy || !email}
+        onclick={onRefresh}><Icon name="refresh-line" /></button
+      >
+    </div>
   </div>
   <div
-    class="mx-7 mt-5 mb-6 grid grid-cols-4 gap-2.5 max-[700px]:mx-[18px] max-[700px]:gap-[7px]"
+    class="m-6 grid grid-cols-4 gap-2 max-[700px]:mx-4 max-[700px]:gap-2"
     aria-label="Filtr rodu"
   >
-    {#each filters as filter}
+    {#each filters as filter (filter[0])}
       <button
-        class="btn btn-secondary min-h-11 max-[700px]:px-[5px] max-[700px]:text-xs {filter[0] ===
-        'all'
-          ? 'col-span-4 min-h-[50px] w-full max-w-[260px] justify-self-center text-[17px]'
-          : ''} {gender === filter[0]
-          ? '!border-[#4268bd] !bg-[#4268bd] !text-white'
+        class="btn btn-secondary min-h-10 sm:px-1 sm:text-xs
+          {filter[0] === 'all'
+          ? 'col-span-4 min-h-12 w-full max-w-60 justify-self-center text-md'
+          : ''}
+          {gender === filter[0]
+          ? 'border-[#4268bd]! bg-[#4268bd]! text-white!'
           : ''}"
         type="button"
         onclick={() => onGender(filter[0])}>{filter[1]}</button
@@ -68,87 +103,29 @@
   {#if error}<p class="notice notice-error">{error}</p>{/if}
   {#if !email}
     <div
-      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#4268bd]"
+      class="px-6 py-10 text-center text-[#64758c] [&>i]:mx-auto [&>i]:text-[#4268bd]"
     >
-      <Icon name="lock" size={30} />
+      <Icon name="lock-line" />
       <p>Přihlaste se pro zobrazení vlastního slovníku.</p>
     </div>
   {:else if busy && !rows.length}
     <div
-      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#4268bd]"
+      class="px-6 py-10 text-center text-[#64758c] [&>i]:mx-auto [&>i]:animate-spin [&>i]:text-[#4268bd]"
     >
-      <Icon name="loader" size={30} />
+      <Icon name="loader-4-line" />
       <p>Načítám slovník…</p>
     </div>
   {:else if !rows.length}
     <div
-      class="px-6 py-[42px] text-center text-[#64758c] [&>svg]:mx-auto [&>svg]:text-[#4268bd]"
+      class="px-6 py-10 text-center text-[#64758c] [&>i]:mx-auto [&>i]:text-[#4268bd]"
     >
-      <Icon name="bookmark" size={30} />
+      <Icon name="bookmark-line" />
       <p>Váš slovník čeká na první slovo.</p>
     </div>
   {:else}
-    <div class="overflow-x-auto px-7 max-[700px]:px-[18px]">
-      <table class="data-table saved-table max-[700px]:min-w-[780px]">
-        <thead>
-          <tr>
-            <th>Slovo</th><th>Rod</th><th>Uloženo</th><th class="text-center"
-              >Překlad</th
-            ><th aria-label="Otevřít detail"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each rows as row}
-            <tr
-              tabindex="0"
-              role="link"
-              onclick={() => onOpen(row)}
-              onkeydown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onOpen(row);
-                }
-              }}
-            >
-              <td><strong>{row.word}</strong></td>
-              <td
-                >{row.result.ijp.entries[0]?.gender
-                  ? genders[row.result.ijp.entries[0].gender]
-                  : 'Rod neurčen'}</td
-              >
-              <td>{new Date(row.updated_at).toLocaleDateString('cs-CZ')}</td>
-              <td>
-                <div
-                  class="flex items-center justify-center gap-4 whitespace-nowrap"
-                >
-                  <a
-                    href={translationUrl('anglicky', row.word)}
-                    target="_blank"
-                    rel="noreferrer"
-                    class="inline-flex items-center gap-[5px] font-bold text-[#4268bd] no-underline"
-                    onclick={(event) => event.stopPropagation()}
-                    >Anglický <Icon name="arrow-up-right" size={12} /></a
-                  >
-                  <a
-                    href={translationUrl('rusky', row.word)}
-                    target="_blank"
-                    rel="noreferrer"
-                    class="inline-flex items-center gap-[5px] font-bold text-[#4268bd] no-underline"
-                    onclick={(event) => event.stopPropagation()}
-                    >Ruský <Icon name="arrow-up-right" size={12} /></a
-                  >
-                </div>
-              </td>
-              <td class="w-[1%] text-right text-[#4268bd]"
-                ><Icon name="arrow-up-right" size={17} /></td
-              >
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+    <SavedWordsTable {rows} {latestSavedId} {onOpen} />
   {/if}
-  <p class="mx-7 mt-1 mb-[18px] text-xs text-[#64758c] max-[700px]:mx-[18px]">
+  <p class="mx-7 mt-1 mb-4 text-xs text-[#64758c] max-[700px]:mx-4">
     Export zahrnuje všechna slova z aktuálně vybraného rodu a všech 14 pádových
     pozic.
   </p>

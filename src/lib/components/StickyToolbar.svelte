@@ -24,10 +24,35 @@
     ['pdf-a4', 'PDF A4'],
     ['pdf-a3', 'PDF A3']
   ];
+
+  let exportOpen = $state(false);
+
+  function closeExportMenu(event: MouseEvent): void {
+    const target = event.target;
+    if (
+      exportOpen &&
+      (!(target instanceof Element) || !target.closest('[data-export-menu]'))
+    ) {
+      exportOpen = false;
+    }
+  }
 </script>
 
+<svelte:window
+  onclick={closeExportMenu}
+  onkeydown={(event) => {
+    if (event.key === 'Escape') exportOpen = false;
+  }}
+/>
+
 <nav
-  class="sticky top-3 z-20 mx-auto -mt-4 mb-8 flex w-full md:max-w-3xl flex-wrap items-center justify-between gap-2 rounded-xl border border-[#cbd8e8] bg-[#f7faff]/95 p-2.5 shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)] ring-1 ring-white/80 backdrop-blur-xl max-[700px]:w-auto"
+  class={[
+    'sticky top-3 z-20 mx-auto mb-8 flex w-full flex-wrap',
+    'items-center justify-between gap-2 rounded-xl border border-[#cbd8e8]',
+    'bg-neutral-50/80 p-2 ring-1 ring-white/80 backdrop-blur-lg',
+    'shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)]',
+    'md:max-w-3xl w-auto'
+  ]}
   aria-label="Hlavní pohledy a export"
 >
   <div class="flex items-center gap-2">
@@ -37,7 +62,8 @@
       aria-pressed={view === 'lookup'}
       onclick={() => onView('lookup')}
     >
-      <Icon name="search" size={16} filled={view === 'lookup'} /> Ověření slova
+      <Icon name={view === 'lookup' ? 'search-fill' : 'search-line'} />
+      Slovo
     </button>
     <button
       class="tab"
@@ -45,25 +71,52 @@
       aria-pressed={view === 'saved'}
       onclick={() => onView('saved')}
     >
-      <Icon name="bookmark" size={16} filled={view === 'saved'} /> Můj slovník
-      <span
-        class="ml-1 rounded-full bg-[#e6edf8] px-2 py-px text-xs text-[#183452]"
-        >{savedCount}</span
-      >
+      <Icon name={view === 'saved' ? 'bookmark-fill' : 'bookmark-line'} />
+      Slovník
+      <span class="ml-1 rounded-full bg-[#e6edf8] px-2 py-px text-[#183452]">
+        {savedCount}
+      </span>
     </button>
   </div>
-  <div
-    class="flex items-center gap-1 text-[#637791] max-md:ml-auto max-[700px]:flex-wrap"
-    aria-label="Export slovníku"
-  >
-    <Icon name="download" size={17} />
-    {#each options as option}
-      <button
-        class="btn bg-transparent px-2 py-1.5 text-xs text-[#4268bd]"
-        type="button"
-        disabled={exportDisabled}
-        onclick={() => onExport(option[0])}>{option[1]}</button
-      >
-    {/each}
-  </div>
+  <details bind:open={exportOpen} data-export-menu class="relative ml-auto">
+    <summary
+      class={[
+        'btn btn-secondary list-none px-3 py-2 text-sm text-[#4268bd]',
+        '[&::-webkit-details-marker]:hidden',
+        exportDisabled ? 'cursor-not-allowed opacity-50' : ''
+      ]}
+      aria-disabled={exportDisabled}
+      onclick={(event) => {
+        if (exportDisabled) event.preventDefault();
+      }}
+    >
+      <Icon name="download-2-line" />
+      Stáhnout
+    </summary>
+    <div
+      class={[
+        'absolute top-full right-0 z-30 mt-2 min-w-36 overflow-hidden',
+        'rounded-lg border border-[#dbe3ee] bg-white p-1',
+        'shadow-[0_12px_32px_rgba(23,55,95,0.16)]'
+      ]}
+      aria-label="Formát stažení"
+    >
+      {#each options as option (option[0])}
+        <button
+          class={[
+            'block w-full cursor-pointer rounded-md bg-transparent px-3',
+            'py-2 text-left text-sm font-bold text-blue-800/90 transition-colors',
+            'hover:bg-neutral-50 hover:text-blue-600 focus:bg-neutral-50 focus:text-blue-600'
+          ]}
+          type="button"
+          onclick={() => {
+            exportOpen = false;
+            onExport(option[0]);
+          }}
+        >
+          {option[1]}
+        </button>
+      {/each}
+    </div>
+  </details>
 </nav>

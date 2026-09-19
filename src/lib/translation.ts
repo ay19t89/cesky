@@ -1,4 +1,5 @@
-import type { TranslationLanguage } from './types';
+export const TRANSLATION_LANGUAGES = ['anglicky', 'rusky'] as const;
+export type TranslationLanguage = (typeof TRANSLATION_LANGUAGES)[number];
 
 export function translationUrl(
   language: TranslationLanguage,

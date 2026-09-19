@@ -16,8 +16,11 @@ export function registerLookup(action: (word: string) => Promise<unknown>) {
         {
           name: 'check_czech_noun',
           title: 'Ověřit české podstatné jméno',
-          description:
-            'Look up a Czech noun in the Internet Language Reference Book, display its declension, and save it to the signed-in user’s dictionary.',
+          description: [
+            'Look up a Czech noun in the Internet Language Reference Book,',
+            'display its declension, and save it to the signed-in user’s',
+            'dictionary.'
+          ].join(' '),
           inputSchema: {
             type: 'object',
             properties: {

@@ -1,6 +1,5 @@
 import { load } from 'cheerio';
 import type { Gender, Lookup, Paradigm, Source } from './types.ts';
-import { fetchTranslations } from './translation-source.ts';
 
 const IJP_BASE = 'https://prirucka.ujc.cas.cz/';
 
@@ -142,13 +141,11 @@ export async function lookup(raw: unknown): Promise<Lookup> {
   const url = `${IJP_BASE}?slovo=${encodeURIComponent(requested)}`;
   const ijp = await fetchIjp(requested).catch(() => failedSource(url));
   const word = ijp.entries[0]?.lemma || requested;
-  const translations = await fetchTranslations(word);
 
   return {
     requested,
     word,
     checkedAt: new Date().toISOString(),
-    ijp,
-    translations
+    ijp
   };
 }

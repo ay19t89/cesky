@@ -1,30 +1,58 @@
 import assert from 'node:assert/strict';
+import { dirname } from 'node:path';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import ts from 'typescript';
 
 await mkdir('.test-build', { recursive: true });
 
-for (const name of [
-  'types',
-  'ijp-url',
-  'translation',
-  'suggestions',
-  'exports'
-]) {
-  const source = await readFile(`src/lib/${name}.ts`, 'utf8');
+async function transpile(sourcePath, outputPath) {
+  const source = await readFile(sourcePath, 'utf8');
   let code = ts.transpileModule(source, {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
       module: ts.ModuleKind.ESNext
     }
   }).outputText;
-  code = code.replace(/from ['"](\.\/[^'"]+)['"]/g, "from '$1.mjs'");
-  await writeFile(`.test-build/${name}.mjs`, code);
+  code = code.replace(
+    /from ['"]((?:\.\.\/|\.\/)[^'"]+)['"]/g,
+    (_, specifier) => `from '${specifier.replace(/\.ts$/, '')}.mjs'`
+  );
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, code);
+}
+
+for (const name of [
+  'types',
+  'czech-order',
+  'ijp-url',
+  'translation',
+  'suggestions',
+  'saved-word-order',
+  'export/shared',
+  'export/rows',
+  'export/csv',
+  'export/xlsx',
+  'export/pdf',
+  'exports'
+]) {
+  await transpile(`src/lib/${name}.ts`, `.test-build/${name}.mjs`);
+}
+
+for (const name of ['types', 'dictionary']) {
+  await transpile(
+    `supabase/functions/_shared/${name}.ts`,
+    `.test-build/server/${name}.mjs`
+  );
 }
 
 const { translationUrl } = await import('../.test-build/translation.mjs');
 const { compareCzechWords, csvText, exportData, exportRows, headers } =
   await import('../.test-build/exports.mjs');
+const { parseIjp, validateWord } =
+  await import('../.test-build/server/dictionary.mjs');
+const { findLatestSavedId, sortSavedWords } =
+  await import('../.test-build/saved-word-order.mjs');
+const { suggest } = await import('../.test-build/suggestions.mjs');
 
 const forms = Array.from({ length: 7 }, (_, index) => [`tvar${index + 1}`]);
 const sourceUrl = 'https://prirucka.ujc.cas.cz/?slovo=mo%C5%99e';
@@ -54,6 +82,40 @@ assert.ok(csv.startsWith('\ufeff'));
 assert.ok(csv.includes('cesky_anglicky/mo%C5%99e'));
 assert.ok(csv.includes('cesky_rusky/mo%C5%99e'));
 assert.ok(csv.includes('=HYPERLINK'));
+
+const ijpHtml = `
+  <div class="hlavicka"><h2><strong>moře</strong></h2></div>
+  <p class="polozky">rod: s.</p>
+  <table class="para">
+    <tr><th>Pád</th><th>jednotné číslo</th><th>množné číslo</th></tr>
+    <tr><td>1. pád</td><td>moře</td><td>moře</td></tr>
+    <tr><td>2. pád</td><td>moře</td><td>moří</td></tr>
+  </table>
+`;
+const parsed = parseIjp(ijpHtml, 'more');
+assert.equal(parsed.status, 'ok');
+assert.equal(parsed.entries[0].lemma, 'moře');
+assert.equal(parsed.entries[0].gender, 'N');
+assert.deepEqual(parsed.entries[0].plural[1], ['moří']);
+assert.equal(validateWord('  déšť  '), 'déšť');
+assert.throws(() => validateWord('dvě slova'));
+assert.throws(() => validateWord('123'));
+
+const savedRows = [
+  { id: '1', word: 'žena', updated_at: '2026-09-01T10:00:00Z' },
+  { id: '2', word: 'čáp', updated_at: '2026-09-03T10:00:00Z' },
+  { id: '3', word: 'auto', updated_at: '2026-09-02T10:00:00Z' }
+];
+assert.deepEqual(
+  sortSavedWords(savedRows, 'alphabetical').map((row) => row.word),
+  ['auto', 'čáp', 'žena']
+);
+assert.deepEqual(
+  sortSavedWords(savedRows, 'recent').map((row) => row.id),
+  ['2', '3', '1']
+);
+assert.equal(findLatestSavedId(savedRows), '2');
+assert.equal(suggest('pocit', ['pocit'])[0], 'pocit');
 
 let downloaded;
 const originalCreateObjectUrl = URL.createObjectURL;
@@ -89,4 +151,4 @@ URL.createObjectURL = originalCreateObjectUrl;
 URL.revokeObjectURL = originalRevokeObjectUrl;
 delete globalThis.document;
 
-console.log('PASS: Czech sorting and Unicode CSV/XLSX translation exports.');
+console.log('PASS: dictionary parsing, validation, sorting, and exports.');

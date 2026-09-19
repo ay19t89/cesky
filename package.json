@@ -19,7 +19,8 @@
     "cheerio": "^1.2.0",
     "exceljs": "^4.4.0",
     "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.8"
+    "jspdf-autotable": "^5.0.8",
+    "remixicon": "^4.9.1"
   },
   "devDependencies": {
     "@openai/sites-vite-plugin": "0.2.0",

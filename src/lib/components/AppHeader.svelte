@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import Icon from '$lib/Icon.svelte';
 
   let {
@@ -15,23 +16,25 @@
 </script>
 
 <header
-  class="flex items-center justify-between border-b border-[#dbe3ee] bg-white px-[5vw] py-[22px]"
+  class="flex items-center justify-between border-b border-[#dbe3ee] bg-white px-[5vw] py-6"
 >
   <a
-    class="flex items-center gap-3 text-[23px] tracking-[-0.6px] text-[#182c47] no-underline [&>svg]:text-[#4268bd]"
-    href="/"
+    class="flex items-center gap-3 text-[23px] tracking-[-0.6px] text-[#182c47] no-underline [&>i]:text-[#4268bd]"
+    href={resolve('/')}
     aria-label="České pády – úvod"
   >
-    <Icon name="book" size={24} />
+    <Icon name="book-open-line" />
     <b>české pády</b>
     <span
-      class="ml-3.5 border-l border-[#dbe3ee] pl-[22px] text-xs font-bold tracking-[1.6px] text-[#6a7a91] max-[700px]:hidden"
-      >OSOBNÍ SLOVNÍK</span
+      class="ml-4 border-l border-[#dbe3ee] pl-6 text-xs font-bold tracking-[1.6px] text-[#6a7a91] max-[700px]:hidden"
+    >
+      OSOBNÍ SLOVNÍK</span
     >
   </a>
   {#if signedIn}
     <button class="btn btn-secondary" type="button" onclick={onLogout}>
-      <Icon name="logout" size={16} /> Odhlásit se
+      <Icon name="logout-box-r-line" />
+      Odhlásit se
     </button>
   {:else}
     <button
@@ -40,7 +43,8 @@
       disabled={!authReady}
       onclick={onLogin}
     >
-      <Icon name="lock" size={16} /> Přihlásit se
+      <Icon name="lock-line" />
+      Přihlásit se
     </button>
   {/if}
 </header>

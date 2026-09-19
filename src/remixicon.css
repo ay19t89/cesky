@@ -1,0 +1,77 @@
+@font-face {
+  font-family: 'remixicon';
+  src: url('../node_modules/remixicon/fonts/remixicon.woff2') format('woff2');
+  font-display: block;
+}
+
+[class^='ri-'],
+[class*=' ri-'] {
+  font-family: 'remixicon' !important;
+  font-style: normal;
+  font-variant: normal;
+  line-height: 1;
+  text-transform: none;
+  speak: never;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ri-search-line::before {
+  content: '\f0d1';
+}
+
+.ri-search-fill::before {
+  content: '\f0d0';
+}
+
+.ri-book-open-line::before {
+  content: '\eadb';
+}
+
+.ri-bookmark-line::before {
+  content: '\eae5';
+}
+
+.ri-bookmark-fill::before {
+  content: '\eae4';
+}
+
+.ri-logout-box-r-line::before {
+  content: '\eeda';
+}
+
+.ri-lock-line::before {
+  content: '\eece';
+}
+
+.ri-download-2-line::before {
+  content: '\ec54';
+}
+
+.ri-refresh-line::before {
+  content: '\f064';
+}
+
+.ri-arrow-right-line::before {
+  content: '\ea6c';
+}
+
+.ri-arrow-right-up-line::before {
+  content: '\ea70';
+}
+
+.ri-check-line::before {
+  content: '\eb7b';
+}
+
+.ri-loader-4-line::before {
+  content: '\eec6';
+}
+
+.ri-sort-asc::before {
+  content: '\f15f';
+}
+
+.ri-time-line::before {
+  content: '\f20f';
+}
