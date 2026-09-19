@@ -12,10 +12,49 @@
     suggestions: string[];
     busy: boolean;
     onInput: () => void;
-    onSubmit: () => void;
+    onSubmit: (searchWord: string) => void;
   } = $props();
 
   let suggestionsOpen = $state(false);
+  let activeSuggestionIndex = $state(-1);
+
+  function closeSuggestions(): void {
+    suggestionsOpen = false;
+    activeSuggestionIndex = -1;
+  }
+
+  function selectSuggestion(suggestion: string): void {
+    word = suggestion;
+    closeSuggestions();
+    onSubmit(suggestion);
+  }
+
+  function moveActiveSuggestion(direction: 1 | -1): void {
+    if (!suggestions.length) return;
+    suggestionsOpen = true;
+    activeSuggestionIndex =
+      (activeSuggestionIndex + direction + suggestions.length) %
+      suggestions.length;
+  }
+
+  function handleSearchKeydown(event: KeyboardEvent): void {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      moveActiveSuggestion(event.key === 'ArrowDown' ? 1 : -1);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      closeSuggestions();
+      return;
+    }
+
+    const activeSuggestion = suggestions[activeSuggestionIndex];
+    if (event.key === 'Enter' && suggestionsOpen && activeSuggestion) {
+      event.preventDefault();
+      selectSuggestion(activeSuggestion);
+    }
+  }
 </script>
 
 <section class="panel p-6 shadow-[0_6px_20px_#152e5510] max-[700px]:p-4">
@@ -26,7 +65,8 @@
     class="flex items-center gap-4 max-[700px]:flex-wrap"
     onsubmit={(event) => {
       event.preventDefault();
-      onSubmit();
+      closeSuggestions();
+      onSubmit(word);
     }}
   >
     <span class="max-[700px]:hidden"><Icon name="search-line" /></span>
@@ -39,17 +79,26 @@
         ]}
         id="word"
         bind:value={word}
-        onfocus={() => (suggestionsOpen = true)}
+        onfocus={() => {
+          suggestionsOpen = true;
+          activeSuggestionIndex = -1;
+        }}
         oninput={() => {
           suggestionsOpen = true;
+          activeSuggestionIndex = -1;
           onInput();
         }}
-        onblur={() => setTimeout(() => (suggestionsOpen = false), 120)}
+        onkeydown={handleSearchKeydown}
+        onblur={() => setTimeout(closeSuggestions, 120)}
         maxlength="80"
         autocomplete="off"
+        enterkeyhint="search"
         placeholder="Například kamarád, žena nebo město"
         aria-autocomplete="list"
         aria-controls="word-suggestions"
+        aria-activedescendant={activeSuggestionIndex >= 0
+          ? `word-suggestion-${activeSuggestionIndex}`
+          : undefined}
         aria-expanded={suggestionsOpen && suggestions.length > 0}
       />
       {#if suggestionsOpen && suggestions.length}
@@ -62,20 +111,21 @@
             'shadow-[0_12px_32px_rgba(23,55,95,0.16)]'
           ]}
         >
-          {#each suggestions as suggestion (suggestion)}
+          {#each suggestions as suggestion, index (suggestion)}
             <button
               class={[
                 'block w-full cursor-pointer rounded-md bg-transparent px-3',
                 'py-2 text-left text-[15px] text-[#24415f]',
-                'hover:bg-[#edf3ff]'
+                'hover:bg-[#edf3ff]',
+                activeSuggestionIndex === index && 'bg-[#edf3ff]'
               ]}
+              id={`word-suggestion-${index}`}
               type="button"
               role="option"
-              aria-selected={word === suggestion}
-              onclick={() => {
-                word = suggestion;
-                suggestionsOpen = false;
-              }}>{suggestion}</button
+              aria-selected={activeSuggestionIndex === index}
+              onfocus={() => (activeSuggestionIndex = index)}
+              onclick={() => selectSuggestion(suggestion)}
+              disabled={busy}>{suggestion}</button
             >
           {/each}
         </div>

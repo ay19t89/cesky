@@ -317,7 +317,7 @@
     {suggestions}
     {busy}
     onInput={updateSuggestions}
-    onSubmit={() => void lookupWord().catch(() => {})}
+    onSubmit={(searchWord) => void lookupWord(searchWord).catch(() => {})}
   />
 
   {#if error}<p class="notice notice-error" role="alert">{error}</p>{/if}
