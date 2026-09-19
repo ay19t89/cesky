@@ -14,11 +14,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'content-type'
 };
 
-function withCors(response: Response): Response {
+function addCorsHeaders(response: Response): Response {
   for (const [name, value] of Object.entries(corsHeaders)) {
     response.headers.set(name, value);
   }
   return response;
+}
+
+function handlePreflightRequest(): Response {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
+
+function buildMethodNotAllowedResponse(): Response {
+  return addCorsHeaders(
+    Response.json(
+      { error: 'Method not allowed' },
+      { status: 405, headers: { Allow: 'GET' } }
+    )
+  );
+}
+
+async function handlePublicDictionaryRequest(
+  request: Request
+): Promise<Response> {
+  if (request.method === 'OPTIONS') return handlePreflightRequest();
+  if (request.method !== 'GET') return buildMethodNotAllowedResponse();
+
+  return addCorsHeaders(await handleDictionary(request));
 }
 
 export default {
@@ -26,18 +48,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/api/dictionary') {
-      if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: corsHeaders });
-      }
-      if (request.method !== 'GET') {
-        return withCors(
-          Response.json(
-            { error: 'Method not allowed' },
-            { status: 405, headers: { Allow: 'GET' } }
-          )
-        );
-      }
-      return withCors(await handleDictionary(request));
+      return handlePublicDictionaryRequest(request);
     }
 
     return environment.ASSETS.fetch(request);

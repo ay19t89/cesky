@@ -97,7 +97,7 @@
     }, 650);
   }
 
-  async function refresh(): Promise<void> {
+  async function loadPersonalDictionary(): Promise<void> {
     if (!auth.session) return;
     const userId = auth.session.user.id;
     savedBusy = true;
@@ -115,7 +115,10 @@
     }
   }
 
-  async function check(value = word, updateHistory = true): Promise<Lookup> {
+  async function lookupWord(
+    value = word,
+    updateHistory = true
+  ): Promise<Lookup> {
     if (!value.trim()) throw new Error('Zadejte slovo.');
 
     const activeRequest = ++requestId;
@@ -145,7 +148,7 @@
       if (!error) {
         currentSaved = true;
         message = 'Uloženo do slovníku.';
-        await refresh();
+        await loadPersonalDictionary();
       }
       return data;
     } catch (cause) {
@@ -159,7 +162,7 @@
     }
   }
 
-  async function toggleSaved(): Promise<void> {
+  async function toggleCurrentWordSaved(): Promise<void> {
     if (!result) return;
     if (!auth.session) {
       auth.loginOpen = true;
@@ -178,7 +181,7 @@
         currentSaved = true;
         message = 'Uloženo do slovníku.';
       }
-      await refresh();
+      await loadPersonalDictionary();
     } catch {
       error = 'Změnu se nepodařilo uložit. Zkontrolujte připojení.';
     } finally {
@@ -186,7 +189,7 @@
     }
   }
 
-  function showSaved(row: Saved): void {
+  function showSavedWord(row: Saved): void {
     requestId += 1;
     busy = false;
     result = row.result;
@@ -199,7 +202,7 @@
 
   function openSaved(row: Saved): void {
     openSavedWord(row.word);
-    showSaved(row);
+    showSavedWord(row);
   }
 
   function selectView(nextView: View): void {
@@ -215,11 +218,11 @@
       ? saved.find((row) => row.word === value)
       : undefined;
     if (matching) {
-      showSaved(matching);
+      showSavedWord(matching);
       return;
     }
     if (value) {
-      await check(value, false).catch(() => {});
+      await lookupWord(value, false).catch(() => {});
       return;
     }
     view = state?.view === 'saved' ? 'saved' : 'lookup';
@@ -254,15 +257,15 @@
         currentSaved = false;
         saved = [];
         message = '';
-        if (session) void refresh();
+        if (session) void loadPersonalDictionary();
       }
       const initialWord = getLookupWord();
       if (initialWord && !initialLookupStarted) {
         initialLookupStarted = true;
-        void check(initialWord, false).catch(() => {});
+        void lookupWord(initialWord, false).catch(() => {});
       }
     });
-    const cleanupWebMcp = registerLookup(check);
+    const cleanupWebMcp = registerLookup(lookupWord);
 
     return () => {
       cleanupAuth();
@@ -316,7 +319,7 @@
     {suggestions}
     {busy}
     onInput={updateSuggestions}
-    onSubmit={() => void check().catch(() => {})}
+    onSubmit={() => void lookupWord().catch(() => {})}
   />
 
   {#if error}<p class="notice notice-error" role="alert">{error}</p>{/if}
@@ -330,7 +333,7 @@
         signedIn={Boolean(auth.session)}
         {currentSaved}
         {message}
-        onToggleSaved={() => void toggleSaved()}
+        onToggleSaved={() => void toggleCurrentWordSaved()}
       />
     {:else}
       <LookupEmptyState />
@@ -346,7 +349,7 @@
       order={savedOrder}
       onGender={(nextGender) => (gender = nextGender)}
       onOrder={(nextOrder) => (savedOrder = nextOrder)}
-      onRefresh={() => void refresh()}
+      onRefresh={() => void loadPersonalDictionary()}
       onOpen={openSaved}
     />
   {/if}

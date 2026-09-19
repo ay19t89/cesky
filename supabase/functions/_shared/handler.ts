@@ -1,25 +1,43 @@
 import { fetchIjp, lookup, validateWord } from './dictionary.ts';
 
+function jsonResponse(body: unknown, cacheControl: string): Response {
+  return Response.json(body, {
+    headers: { 'Cache-Control': cacheControl }
+  });
+}
+
+async function buildSuggestionResponse(word: string): Promise<Response> {
+  const dictionary = await fetchIjp(word);
+  const suggestions = [
+    ...new Set(dictionary.entries.map((entry) => entry.lemma))
+  ];
+
+  return jsonResponse({ suggestions }, 'public, max-age=300');
+}
+
+async function buildLookupResponse(word: string): Promise<Response> {
+  const result = await lookup(word);
+  return jsonResponse(result, 'public, max-age=60');
+}
+
+function buildErrorResponse(error: unknown): Response {
+  const message =
+    error instanceof Error ? error.message : 'Ověření se nezdařilo.';
+
+  return Response.json({ error: message }, { status: 400 });
+}
+
 export async function handleDictionary(request: Request): Promise<Response> {
   try {
     const url = new URL(request.url);
     const word = validateWord(url.searchParams.get('word'));
+
     if (url.searchParams.get('action') === 'suggest') {
-      const data = await fetchIjp(word);
-      return Response.json(
-        { suggestions: [...new Set(data.entries.map((x) => x.lemma))] },
-        { headers: { 'Cache-Control': 'public, max-age=300' } }
-      );
+      return await buildSuggestionResponse(word);
     }
-    return Response.json(await lookup(word), {
-      headers: { 'Cache-Control': 'public, max-age=60' }
-    });
+
+    return await buildLookupResponse(word);
   } catch (error) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : 'Ověření se nezdařilo.'
-      },
-      { status: 400 }
-    );
+    return buildErrorResponse(error);
   }
 }
