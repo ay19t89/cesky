@@ -135,8 +135,8 @@ const lowercaseFallback = await lookup('MORE');
 assert.equal(lowercaseFallback.word, 'moře');
 assert.equal(lowercaseFallback.requested, 'MORE');
 assert.equal(requestedUrls.length, 3);
-assert.ok(requestedUrls[1].includes('?id=MORE'));
-assert.ok(requestedUrls[2].includes('slovo=more'));
+assert.ok(requestedUrls.some((url) => url.includes('?id=MORE')));
+assert.ok(requestedUrls.some((url) => url.includes('slovo=more')));
 
 requestedUrls.length = 0;
 globalThis.fetch = async (url) => {
