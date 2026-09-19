@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && node scripts/build-sites-worker.mjs",
+    "build:pages": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "node scripts/test.mjs",

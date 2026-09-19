@@ -23,6 +23,13 @@ npm run build
 The SvelteKit output and Sites worker bundle are written to `build/` and
 configured in `.openai/hosting.json`.
 
+## GitHub Pages
+
+The `main` branch deploys the static SvelteKit build through GitHub Actions.
+That build uses the `/cesky` base path and the public ChatGPT Sites dictionary
+worker. The regular Sites build keeps using the same worker through its
+same-origin `/api/dictionary` route.
+
 ## Supabase
 
 The existing project URL and publishable key are stored in `src/lib/config.ts`.

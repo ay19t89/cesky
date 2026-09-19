@@ -34,5 +34,16 @@ function dictionaryApiDev(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [dictionaryApiDev(), tailwindcss(), sveltekit(), sites()]
+  build: {
+    rolldownOptions: {
+      // jsPDF loads this only for SVG conversion, which our PDF export does not use.
+      external: ['canvg']
+    }
+  },
+  plugins: [
+    dictionaryApiDev(),
+    tailwindcss(),
+    sveltekit(),
+    ...(process.env.GITHUB_PAGES === 'true' ? [] : [sites()])
+  ]
 });
