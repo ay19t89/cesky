@@ -6,7 +6,15 @@ import { datedExportFilename, download } from './export/shared';
 
 export { csvText } from './export/csv';
 export { exportRows } from './export/rows';
-export { compareCzechWords, headers } from './export/shared';
+export {
+  compareCzechWords,
+  datedExportFilename,
+  headers
+} from './export/shared';
+
+function exportFilenameWord(results: Lookup[]): string {
+  return results.length === 1 ? results[0].word : 'slovnik';
+}
 
 export async function exportData(
   format: 'csv' | 'xlsx' | 'pdf-a4' | 'pdf-a3',
@@ -16,7 +24,7 @@ export async function exportData(
     throw new Error('Nejprve vyberte slova k exportu.');
   }
 
-  const filename = datedExportFilename();
+  const filename = datedExportFilename(exportFilenameWord(results));
 
   if (format === 'csv') {
     download(csvText(results), 'text/csv;charset=utf-8', `${filename}.csv`);
@@ -29,5 +37,5 @@ export async function exportData(
   }
 
   const size = format === 'pdf-a3' ? 'a3' : 'a4';
-  await exportPdf(results, `${filename}-${size}`, size);
+  await exportPdf(results, filename, size);
 }

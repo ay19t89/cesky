@@ -41,8 +41,16 @@ export function genderLabel(entry: Paradigm | null): string {
   return entry?.gender ? genders[entry.gender] : 'Rod neurčen';
 }
 
-export function datedExportFilename(): string {
-  return `ceske-pady-${new Date().toISOString().slice(0, 10)}`;
+function safeFilenamePart(value: string): string {
+  return value
+    .trim()
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
+    .replace(/\s+/g, '-');
+}
+
+export function datedExportFilename(word: string, date = new Date()): string {
+  const filenameWord = safeFilenamePart(word) || 'slovo';
+  return `${filenameWord}_${date.toISOString().slice(0, 10)}`;
 }
 
 export function download(data: BlobPart, type: string, filename: string): void {

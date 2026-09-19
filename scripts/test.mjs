@@ -47,8 +47,14 @@ for (const name of ['types', 'dictionary']) {
 }
 
 const { translationUrl } = await import('../.test-build/translation.mjs');
-const { compareCzechWords, csvText, exportData, exportRows, headers } =
-  await import('../.test-build/exports.mjs');
+const {
+  compareCzechWords,
+  csvText,
+  datedExportFilename,
+  exportData,
+  exportRows,
+  headers
+} = await import('../.test-build/exports.mjs');
 const { parseIjp, validateWord } =
   await import('../.test-build/server/dictionary.mjs');
 const { findLatestSavedId, sortSavedWords } =
@@ -119,6 +125,14 @@ assert.deepEqual(
 );
 assert.equal(findLatestSavedId(savedRows), '2');
 assert.equal(suggest('pocit', ['pocit'])[0], 'pocit');
+assert.equal(
+  datedExportFilename('auto', new Date('2026-09-19T20:30:00Z')),
+  'auto_2026-09-19'
+);
+assert.equal(
+  datedExportFilename('moje/auto', new Date('2026-09-19T20:30:00Z')),
+  'mojeauto_2026-09-19'
+);
 
 for (const pattern of canonicalPatterns) {
   const match = inferDeclensionPattern(pattern);
@@ -154,6 +168,7 @@ assert.equal(
 );
 
 let downloaded;
+let downloadedFilename;
 const originalCreateObjectUrl = URL.createObjectURL;
 const originalRevokeObjectUrl = URL.revokeObjectURL;
 URL.createObjectURL = (blob) => {
@@ -163,10 +178,18 @@ URL.createObjectURL = (blob) => {
 URL.revokeObjectURL = () => {};
 globalThis.document = {
   baseURI: 'https://example.com/',
-  createElement: () => ({ click() {} })
+  createElement: () => ({
+    click() {
+      downloadedFilename = this.download;
+    }
+  })
 };
 
 await exportData('xlsx', [fixture]);
+assert.equal(
+  downloadedFilename,
+  `moře_${new Date().toISOString().slice(0, 10)}.xlsx`
+);
 const { default: ExcelJS } = await import('exceljs');
 const workbook = new ExcelJS.Workbook();
 await workbook.xlsx.load(Buffer.from(await downloaded.arrayBuffer()));
