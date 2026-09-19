@@ -1,4 +1,4 @@
-import { pushState, replaceState } from '$app/navigation';
+import { goto, pushState } from '$app/navigation';
 import { base, resolve } from '$app/paths';
 import type { PathnameWithSearchOrHash } from '$app/types';
 
@@ -17,32 +17,15 @@ export function pushLookupWord(word: string): void {
   pushState(resolve(currentPath(url)), { view: 'lookup', word });
 }
 
-export function openSavedWord(word: string): void {
-  const url = new URL(window.location.href);
-  replaceState(resolve(currentPath(url)), { view: 'saved' });
-  url.searchParams.set('slovo', word);
-  pushState(resolve(currentPath(url)), { view: 'lookup', word });
+export function openSavedWord(word: string): Promise<void> {
+  const query = new URLSearchParams({ slovo: word });
+  return goto(`${base}/?${query}`);
 }
 
-export function isSavedDictionaryPath(): boolean {
-  const path = new URL(window.location.href).pathname.replace(/\/$/, '');
-  return path === `${base}/slovnik`;
+export function openSavedDictionary(): Promise<void> {
+  return goto(`${base}/slovnik`);
 }
 
-export function openSavedDictionary(): void {
-  const url = new URL(window.location.href);
-  url.pathname = `${base}/slovnik`;
-  url.search = '';
-  if (isSavedDictionaryPath() && !getLookupWord()) {
-    replaceState(resolve(currentPath(url)), { view: 'saved' });
-    return;
-  }
-  pushState(resolve(currentPath(url)), { view: 'saved' });
-}
-
-export function openLookupHome(): void {
-  const url = new URL(window.location.href);
-  url.pathname = `${base}/`;
-  url.search = '';
-  pushState(resolve(currentPath(url)), { view: 'lookup' });
+export function openLookupHome(): Promise<void> {
+  return goto(`${base}/`);
 }

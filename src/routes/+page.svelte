@@ -3,7 +3,6 @@
   import LoginDialog from '$lib/components/LoginDialog.svelte';
   import LookupEmptyState from '$lib/components/LookupEmptyState.svelte';
   import LookupResult from '$lib/components/LookupResult.svelte';
-  import SavedDictionary from '$lib/components/SavedDictionary.svelte';
   import SearchPanel from '$lib/components/SearchPanel.svelte';
   import SiteFooter from '$lib/components/SiteFooter.svelte';
   import StickyToolbar, {
@@ -13,43 +12,33 @@
   import { requestDictionary } from '$lib/dictionary-api';
   import { exportData } from '$lib/exports';
   import {
-    clearLookupWord,
     getLookupWord,
-    openSavedWord,
+    openSavedDictionary,
     pushLookupWord
   } from '$lib/lookup-history';
   import { createPageAuth } from '$lib/page-auth.svelte';
-  import {
-    findLatestSavedId,
-    sortSavedWords,
-    type SavedWordOrder
-  } from '$lib/saved-word-order';
   import { loadSavedWords, removeWord, saveWord } from '$lib/saved-words';
   import {
     loadLearnedSuggestions,
     rememberSuggestion,
     suggest
   } from '$lib/suggestions';
-  import { type Gender, type Lookup, type Saved } from '$lib/types';
+  import type { Lookup, Saved } from '$lib/types';
   import { registerLookup } from '$lib/webmcp';
   import { onMount, tick } from 'svelte';
 
   const auth = createPageAuth();
+  const view: View = 'lookup';
   let word = $state('');
   let suggestions = $state.raw<string[]>([]);
   let result = $state.raw<Lookup | null>(null);
+  let saved = $state.raw<Saved[]>([]);
   let busy = $state(false);
   let error = $state('');
   let message = $state('');
-  let saved = $state.raw<Saved[]>([]);
-  let savedBusy = $state(false);
-  let savedError = $state('');
   let saving = $state(false);
   let currentSaved = $state(false);
   let exporting = $state(false);
-  let view = $state<View>('lookup');
-  let gender = $state<'all' | Gender>('all');
-  let savedOrder = $state<SavedWordOrder>('recent');
   let learnedSuggestions = $state.raw<string[]>([]);
   let requestId = $state(0);
   let savedForUser = $state<string | null>(null);
@@ -81,19 +70,6 @@
     });
   }
 
-  const latestSavedId = $derived(findLatestSavedId(saved));
-
-  const visibleSaved = $derived.by(() =>
-    sortSavedWords(
-      saved.filter(
-        (item) =>
-          gender === 'all' ||
-          item.result.ijp.entries.some((entry) => entry.gender === gender)
-      ),
-      savedOrder
-    )
-  );
-
   function updateSuggestions(): void {
     const local = suggest(word, [
       ...saved.map((item) => item.word),
@@ -120,16 +96,15 @@
             suggestions = local;
           }
         });
-    }, 650);
+    }, 4_000);
   }
 
   function loadPersonalDictionary(): Promise<void> {
     if (!auth.session) return Promise.resolve();
     const userId = auth.session.user.id;
     if (savedLoad?.userId === userId) return savedLoad.promise;
+
     const promise = (async () => {
-      savedBusy = true;
-      savedError = '';
       try {
         const rows = await loadSavedWords();
         if (auth.session?.user.id === userId) {
@@ -137,10 +112,7 @@
           savedForUser = userId;
         }
       } catch {
-        savedError =
-          'Slovník nelze načíst. Zkontrolujte připojení a nastavení Supabase.';
-      } finally {
-        savedBusy = false;
+        savedForUser = null;
       }
     })();
     const trackedPromise = promise.finally(() => {
@@ -158,29 +130,33 @@
 
     const activeRequest = ++requestId;
     busy = true;
+    if (suggestionTimer) clearTimeout(suggestionTimer);
+    suggestionRequest?.abort();
     error = '';
     message = '';
     currentSaved = false;
-    view = 'lookup';
 
     try {
       if (auth.session && savedForUser !== auth.session.user.id) {
         await loadPersonalDictionary();
       }
-      const data =
-        savedLookup(value) || (await requestDictionary(value.trim()));
+
+      const personalResult = savedLookup(value);
+      const data = personalResult || (await requestDictionary(value.trim()));
       if (activeRequest === requestId) {
         result = data;
         word = data.word;
+        currentSaved = Boolean(personalResult);
         if (updateHistory) pushLookupWord(data.word);
         if (updateHistory && data.ijp.entries.length) {
           void scrollAfterFound();
         }
       }
       if (!data.ijp.entries.length) return data;
+
       learnedSuggestions = rememberSuggestion(data.word);
       const activeSession = auth.session;
-      if (!activeSession) return data;
+      if (!activeSession || personalResult) return data;
 
       try {
         await saveWord(activeSession.user.id, data);
@@ -231,64 +207,30 @@
     }
   }
 
-  function showSavedWord(row: Saved): void {
-    requestId += 1;
-    busy = false;
-    result = row.result;
-    currentSaved = true;
-    word = row.word;
-    view = 'lookup';
-    error = '';
-    message = '';
-  }
-
-  function openSaved(row: Saved): void {
-    openSavedWord(row.word);
-    showSavedWord(row);
-  }
-
-  function selectView(nextView: View): void {
-    if (nextView === 'saved') {
-      clearLookupWord();
-    }
-    view = nextView;
-  }
-
-  async function restoreHistory(state?: { view?: string }): Promise<void> {
+  async function restoreHistory(): Promise<void> {
     const value = getLookupWord();
-    const matching = value
-      ? saved.find((row) => row.word === value)
-      : undefined;
-    if (matching) {
-      showSavedWord(matching);
-      return;
-    }
     if (value) {
       await lookupWord(value, false).catch(() => {});
       return;
     }
-    view = state?.view === 'saved' ? 'saved' : 'lookup';
     result = null;
   }
 
   async function runExport(format: ExportFormat): Promise<void> {
+    if (!result) return;
     exporting = true;
-    savedError = '';
+    error = '';
     try {
-      const rows =
-        view === 'saved'
-          ? visibleSaved.map((row) => row.result)
-          : result
-            ? [result]
-            : [];
-      if (!rows.length) return;
-      await exportData(format, rows);
+      await exportData(format, [result]);
     } catch (cause) {
-      savedError =
-        cause instanceof Error ? cause.message : 'Export se nezdařil.';
+      error = cause instanceof Error ? cause.message : 'Export se nezdařil.';
     } finally {
       exporting = false;
     }
+  }
+
+  function selectView(nextView: View): void {
+    if (nextView === 'saved') void openSavedDictionary();
   }
 
   onMount(() => {
@@ -319,7 +261,7 @@
   });
 </script>
 
-<svelte:window onpopstate={(event) => void restoreHistory(event.state)} />
+<svelte:window onpopstate={() => void restoreHistory()} />
 
 <svelte:head>
   <title>České pády</title>
@@ -336,19 +278,17 @@
   }}
 />
 
-<main class="mx-auto max-w-300 pt-6 pb-16 px-3 sm:px-4 lg:px-8 sm:pb-14">
+<main class="mx-auto max-w-300 px-3 pt-6 pb-16 sm:px-4 sm:pb-14 lg:px-8">
   <StickyToolbar
     {view}
     savedCount={saved.length}
-    exportDisabled={exporting ||
-      busy ||
-      (view === 'saved' ? !visibleSaved.length : !result)}
+    exportDisabled={exporting || busy || !result}
     onView={selectView}
     onExport={(format) => void runExport(format)}
   />
 
   <div class="eyebrow">SLOVO PO SLOVU</div>
-  <h1 class="mt-2 leading-[1.2] tracking-[-1.5px] text-3xl sm:text-4xl">
+  <h1 class="mt-2 text-3xl leading-[1.2] tracking-[-1.5px] sm:text-4xl">
     Čeština ve všech pádech.
   </h1>
   <p class="mt-1 mb-6 text-neutral-500">
@@ -365,36 +305,19 @@
 
   {#if error}<p class="notice notice-error" role="alert">{error}</p>{/if}
 
-  {#if view === 'lookup'}
-    {#if result}
-      <LookupResult
-        {result}
-        {busy}
-        {saving}
-        signedIn={Boolean(auth.session)}
-        {currentSaved}
-        {message}
-        onToggleSaved={() => void toggleCurrentWordSaved()}
-        onSuggestion={(suggestion) =>
-          void lookupWord(suggestion).catch(() => {})}
-      />
-    {:else}
-      <LookupEmptyState />
-    {/if}
-  {:else}
-    <SavedDictionary
-      email={auth.session?.user.email}
-      busy={savedBusy}
-      error={savedError}
-      rows={visibleSaved}
-      {latestSavedId}
-      {gender}
-      order={savedOrder}
-      onGender={(nextGender) => (gender = nextGender)}
-      onOrder={(nextOrder) => (savedOrder = nextOrder)}
-      onRefresh={() => void loadPersonalDictionary()}
-      onOpen={openSaved}
+  {#if result}
+    <LookupResult
+      {result}
+      {busy}
+      {saving}
+      signedIn={Boolean(auth.session)}
+      {currentSaved}
+      {message}
+      onToggleSaved={() => void toggleCurrentWordSaved()}
+      onSuggestion={(suggestion) => void lookupWord(suggestion).catch(() => {})}
     />
+  {:else}
+    <LookupEmptyState />
   {/if}
   <SiteFooter />
 </main>
