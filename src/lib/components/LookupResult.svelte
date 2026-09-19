@@ -36,7 +36,7 @@
     class="flex justify-between gap-4 p-6 max-sm:flex-wrap max-sm:px-4 max-sm:pt-5"
   >
     <div>
-      <div class="eyebrow">VÝSLEDEK OVĚŘENÍ</div>
+      <div class="eyebrow">VÝSLEDEK</div>
       <h2 class="my-3 text-4xl tracking-[-1px]">
         {result.word}
       </h2>
@@ -56,9 +56,7 @@
         </p>
       {/if}
     </div>
-    <div
-      class="flex flex-col absolute right-3 items-end justify-center gap-2"
-    >
+    <div class="flex flex-col relative items-end justify-center gap-2">
       <small class="text-xs text-neutral-500 tabular-nums">
         {checkedAt(result.checkedAt)}</small
       >
