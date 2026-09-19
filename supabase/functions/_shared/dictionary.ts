@@ -29,7 +29,11 @@ export function validateWord(value: unknown): string {
   return word;
 }
 
-export function parseIjp(html: string, word: string): Source {
+export function parseIjp(
+  html: string,
+  word: string,
+  url = `${IJP_BASE}?slovo=${encodeURIComponent(word)}`
+): Source {
   const $ = load(html);
   const entries: Paradigm[] = [];
   const suggestions = [
@@ -125,7 +129,7 @@ export function parseIjp(html: string, word: string): Source {
 
   return {
     status: entries.length ? 'ok' : trafficLimited ? 'error' : 'not_found',
-    url: `${IJP_BASE}?slovo=${encodeURIComponent(word)}`,
+    url,
     entries,
     message: entries.length
       ? undefined
@@ -162,8 +166,27 @@ function failedSource(url: string, cause?: unknown): Source {
 }
 
 export async function fetchIjp(word: string): Promise<Source> {
-  const url = `${IJP_BASE}?slovo=${encodeURIComponent(word)}`;
-  return parseIjp(await (await fetchRemote(url)).text(), word);
+  const searchUrl = `${IJP_BASE}?slovo=${encodeURIComponent(word)}`;
+  const searchSource = parseIjp(
+    await (await fetchRemote(searchUrl)).text(),
+    word,
+    searchUrl
+  );
+  if (searchSource.entries.length || searchSource.status === 'error') {
+    return searchSource;
+  }
+
+  const entryUrl = `${IJP_BASE}?id=${encodeURIComponent(word)}`;
+  const entrySource = parseIjp(
+    await (await fetchRemote(entryUrl)).text(),
+    word,
+    entryUrl
+  );
+  if (entrySource.entries.length || entrySource.status === 'error') {
+    return entrySource;
+  }
+
+  return combineMissingSources([searchSource, entrySource]);
 }
 
 function combineMissingSources(sources: Source[]): Source {

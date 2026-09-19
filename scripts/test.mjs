@@ -130,8 +130,19 @@ globalThis.fetch = async (url) => {
 const lowercaseFallback = await lookup('MORE');
 assert.equal(lowercaseFallback.word, 'moře');
 assert.equal(lowercaseFallback.requested, 'MORE');
+assert.equal(requestedUrls.length, 3);
+assert.ok(requestedUrls[1].includes('?id=MORE'));
+assert.ok(requestedUrls[2].includes('slovo=more'));
+
+requestedUrls.length = 0;
+globalThis.fetch = async (url) => {
+  requestedUrls.push(String(url));
+  return new Response(String(url).includes('?id=') ? ijpHtml : '<main></main>');
+};
+const idFallback = await lookup('moře');
+assert.equal(idFallback.word, 'moře');
+assert.ok(idFallback.ijp.url.includes('?id=mo%C5%99e'));
 assert.equal(requestedUrls.length, 2);
-assert.ok(requestedUrls[1].includes('more'));
 globalThis.fetch = originalFetch;
 
 const savedRows = [
