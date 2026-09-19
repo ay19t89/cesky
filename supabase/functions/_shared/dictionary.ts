@@ -205,17 +205,17 @@ function combineMissingSources(sources: Source[]): Source {
 async function lookupWithCaseFallback(requested: string): Promise<Source> {
   const lowercase = requested.toLocaleLowerCase('cs-CZ');
   const candidates = [...new Set([requested, lowercase])];
-  const attempted: Source[] = [];
+  const attempted = await Promise.all(
+    candidates.map(async (candidate) => {
+      const url = `${IJP_BASE}?slovo=${encodeURIComponent(candidate)}`;
+      return await fetchIjp(candidate).catch((cause) =>
+        failedSource(url, cause)
+      );
+    })
+  );
 
-  for (const candidate of candidates) {
-    const url = `${IJP_BASE}?slovo=${encodeURIComponent(candidate)}`;
-    const source = await fetchIjp(candidate).catch((cause) =>
-      failedSource(url, cause)
-    );
-    if (source.entries.length) return source;
-    if (source.status === 'error') return source;
-    attempted.push(source);
-  }
+  const found = attempted.find((source) => source.entries.length);
+  if (found) return found;
 
   return combineMissingSources(attempted);
 }
