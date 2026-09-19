@@ -1,6 +1,7 @@
 <script lang="ts">
   import { checkedAt } from '$lib/dictionary-format';
   import DeclensionTable from '$lib/components/DeclensionTable.svelte';
+  import DeclensionPatternBadges from '$lib/components/DeclensionPatternBadges.svelte';
   import DictionarySource from '$lib/components/DictionarySource.svelte';
   import Icon from '$lib/Icon.svelte';
   import { genders, type Lookup } from '$lib/types';
@@ -44,6 +45,7 @@
             >{entryGender ? genders[entryGender] : 'Rod neurčen'}</span
           >
         {/each}
+        <DeclensionPatternBadges entries={result.ijp.entries} />
       </div>
       {#if result.requested !== result.word}
         <p class="max-w-162 text-sm text-[#52647c]">

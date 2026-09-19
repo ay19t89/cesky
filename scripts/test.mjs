@@ -23,6 +23,7 @@ async function transpile(sourcePath, outputPath) {
 
 for (const name of [
   'types',
+  'declension-patterns',
   'czech-order',
   'ijp-url',
   'translation',
@@ -53,6 +54,8 @@ const { parseIjp, validateWord } =
 const { findLatestSavedId, sortSavedWords } =
   await import('../.test-build/saved-word-order.mjs');
 const { suggest } = await import('../.test-build/suggestions.mjs');
+const { canonicalPatterns, inferDeclensionPattern, patternsForGender } =
+  await import('../.test-build/declension-patterns.mjs');
 
 const forms = Array.from({ length: 7 }, (_, index) => [`tvar${index + 1}`]);
 const sourceUrl = 'https://prirucka.ujc.cas.cz/?slovo=mo%C5%99e';
@@ -117,6 +120,39 @@ assert.deepEqual(
 assert.equal(findLatestSavedId(savedRows), '2');
 assert.equal(suggest('pocit', ['pocit'])[0], 'pocit');
 
+for (const pattern of canonicalPatterns) {
+  const match = inferDeclensionPattern(pattern);
+  assert.equal(match?.name, pattern.name);
+  assert.equal(match?.confidence, 'high');
+  assert.equal(match?.score, 100);
+}
+assert.deepEqual(patternsForGender('N'), ['město', 'moře', 'kuře', 'stavení']);
+assert.equal(
+  inferDeclensionPattern({
+    lemma: 'radost',
+    gender: 'F',
+    singular: rowForTest(
+      'radost',
+      'radosti',
+      'radosti',
+      'radost',
+      'radosti',
+      'radosti',
+      'radostí'
+    ),
+    plural: rowForTest(
+      'radosti',
+      'radostí',
+      'radostem',
+      'radosti',
+      'radosti',
+      'radostech',
+      'radostmi'
+    )
+  })?.name,
+  'kost'
+);
+
 let downloaded;
 const originalCreateObjectUrl = URL.createObjectURL;
 const originalRevokeObjectUrl = URL.revokeObjectURL;
@@ -152,3 +188,7 @@ URL.revokeObjectURL = originalRevokeObjectUrl;
 delete globalThis.document;
 
 console.log('PASS: dictionary parsing, validation, sorting, and exports.');
+
+function rowForTest(...values) {
+  return values.map((value) => [value]);
+}

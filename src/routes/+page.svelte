@@ -293,7 +293,7 @@
   }}
 />
 
-<main class="mx-auto max-w-300 px-8 pt-6 pb-16 sm:px-4 sm:pb-14">
+<main class="mx-auto max-w-300 pt-6 pb-16 px-8 sm:px-2 md:px-4 sm:pb-14">
   <StickyToolbar
     {view}
     savedCount={saved.length}
@@ -305,9 +305,7 @@
   />
 
   <div class="eyebrow">SLOVO PO SLOVU</div>
-  <h1
-    class="mt-2 text-4xl leading-[1.2] tracking-[-1.5px] sm:text-3xl"
-  >
+  <h1 class="mt-2 text-4xl leading-[1.2] tracking-[-1.5px] sm:text-3xl">
     Čeština ve všech pádech.
   </h1>
   <p class="mt-1 mb-6 text-[#52647c]">
