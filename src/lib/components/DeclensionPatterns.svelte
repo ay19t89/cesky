@@ -1,7 +1,10 @@
 <script lang="ts">
+  import CanonicalPatternTable from '$lib/components/CanonicalPatternTable.svelte';
+  import { canonicalPatterns } from '$lib/declension-patterns';
   import Icon from '$lib/Icon.svelte';
   import { examplesByPattern, patternGroups } from '$lib/pattern-examples';
   import type { Saved } from '$lib/types';
+  import { SvelteSet } from 'svelte/reactivity';
 
   let {
     saved,
@@ -22,6 +25,10 @@
   } = $props();
 
   const examples = $derived(examplesByPattern(saved));
+  const canonicalByName = new Map(
+    canonicalPatterns.map((pattern) => [pattern.name, pattern])
+  );
+  const visibleExamples = new SvelteSet<string>();
 
   function exampleLabel(count: number): string {
     if (count === 1) return '1 příklad';
@@ -32,6 +39,16 @@
   function patternLabel(count: number): string {
     return count > 1 && count < 5 ? `${count} vzory` : `${count} vzorů`;
   }
+
+  function toggleExamples(pattern: string): void {
+    if (!signedIn) {
+      onLogin();
+      return;
+    }
+
+    if (visibleExamples.has(pattern)) visibleExamples.delete(pattern);
+    else visibleExamples.add(pattern);
+  }
 </script>
 
 <section class="panel mt-6 overflow-hidden">
@@ -40,7 +57,7 @@
       <div class="eyebrow">PŘEHLED VZORŮ</div>
       <h2 class="mt-2 text-2xl tracking-[-0.5px]">Skloňovací vzory</h2>
       <p class="mt-2 mb-0 max-w-2xl text-sm text-neutral-500">
-        Rozbalte vzor a podívejte se na odpovídající slova ze svého slovníku.
+        Rozbalte vzor pro jeho skloňování a případné příklady ze svého slovníku.
       </p>
     </div>
     {#if signedIn}
@@ -60,7 +77,7 @@
     <p class="notice notice-error mx-5 mt-0 sm:mx-6" role="alert">{error}</p>
   {/if}
 
-  <div class="grid gap-5 border-t border-[#e5ebf3] p-5 sm:p-6 lg:grid-cols-3">
+  <div class="space-y-7 border-t border-[#e5ebf3] p-5 sm:p-6">
     {#each patternGroups as group (group.title)}
       <section>
         <div class="mb-3 flex items-baseline justify-between gap-2">
@@ -70,7 +87,7 @@
           </span>
         </div>
 
-        <div class="space-y-4">
+        <div class="grid gap-5 lg:grid-cols-2">
           {#each group.sections as section (`${group.title}-${section.title || 'all'}`)}
             <div>
               {#if section.title}
@@ -79,9 +96,10 @@
                 </h4>
               {/if}
 
-              <div class="space-y-2">
+              <div class="grid gap-3 xl:grid-cols-2">
                 {#each section.patterns as pattern (pattern)}
                   {@const words = examples.get(pattern) || []}
+                  {@const canonical = canonicalByName.get(pattern)}
                   <details
                     class="group rounded-lg border border-[#dbe3ee] bg-white"
                   >
@@ -90,45 +108,54 @@
                     >
                       <span class="font-bold text-[#183452]">{pattern}</span>
                       <span class="ml-auto text-xs text-[#61738a]">
-                        {signedIn ? exampleLabel(words.length) : 'Příklady'}
+                        Tabulka skloňování
                       </span>
                       <span class="transition-transform group-open:rotate-180">
                         <Icon name="arrow-down-s-line" />
                       </span>
                     </summary>
 
-                    <div class="border-t border-[#e5ebf3] px-3 py-3">
-                      {#if !signedIn}
-                        <p class="mb-3 text-sm text-[#61738a]">
-                          Přihlaste se a zobrazte příklady ze svého slovníku.
-                        </p>
+                    <div class="border-t border-[#e5ebf3]">
+                      {#if canonical}
+                        <CanonicalPatternTable pattern={canonical} />
+                      {/if}
+
+                      <div class="border-t border-[#e5ebf3] p-3">
                         <button
                           class="btn btn-secondary px-3 py-2 text-xs"
                           type="button"
-                          onclick={onLogin}
+                          disabled={signedIn && busy}
+                          onclick={() => toggleExamples(pattern)}
                         >
-                          Přihlásit se
+                          <Icon name="database-2-line" />
+                          {signedIn
+                            ? `Příklady z mého slovníku · ${exampleLabel(words.length)}`
+                            : 'Příklady z mého slovníku'}
                         </button>
-                      {:else if busy}
-                        <p class="text-sm text-[#61738a]">Načítám příklady…</p>
-                      {:else if words.length}
-                        <div class="flex flex-wrap gap-2">
-                          {#each words as word (word)}
-                            <button
-                              class="inline-flex cursor-pointer items-center gap-1 rounded-md bg-[#edf3ff] px-2 py-1 text-sm font-semibold text-[#4268bd] hover:bg-[#e1ebff]"
-                              type="button"
-                              onclick={() => onOpen(word)}
-                            >
-                              {word}
-                              <Icon name="arrow-right-up-line" />
-                            </button>
-                          {/each}
-                        </div>
-                      {:else}
-                        <p class="text-sm text-[#61738a]">
-                          Ve vašem slovníku zatím není žádný příklad.
-                        </p>
-                      {/if}
+
+                        {#if visibleExamples.has(pattern)}
+                          <div class="mt-3">
+                            {#if words.length}
+                              <div class="flex flex-wrap gap-2">
+                                {#each words as word (word)}
+                                  <button
+                                    class="inline-flex cursor-pointer items-center gap-1 rounded-md bg-[#edf3ff] px-2 py-1 text-sm font-semibold text-[#4268bd] hover:bg-[#e1ebff]"
+                                    type="button"
+                                    onclick={() => onOpen(word)}
+                                  >
+                                    {word}
+                                    <Icon name="arrow-right-up-line" />
+                                  </button>
+                                {/each}
+                              </div>
+                            {:else}
+                              <p class="text-sm text-[#61738a]">
+                                Ve vašem slovníku zatím není žádný příklad.
+                              </p>
+                            {/if}
+                          </div>
+                        {/if}
+                      </div>
                     </div>
                   </details>
                 {/each}

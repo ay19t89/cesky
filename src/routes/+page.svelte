@@ -18,7 +18,11 @@
     pushLookupWord
   } from '$lib/lookup-history';
   import { createPageAuth } from '$lib/page-auth.svelte';
-  import { removeWord, saveWord } from '$lib/saved-words';
+  import {
+    loadSavedWordCount,
+    removeWord,
+    saveWord
+  } from '$lib/saved-words';
   import { createSuggestionController } from '$lib/suggestion-controller';
   import type { Lookup } from '$lib/types';
   import { registerLookup } from '$lib/webmcp';
@@ -35,11 +39,27 @@
   let saving = $state(false);
   let currentSaved = $state(false);
   let exporting = $state(false);
+  let savedCount = $state<number | undefined>(undefined);
   let requestId = $state(0);
   const suggestionController = createSuggestionController({
     getWord: () => word,
     setSuggestions: (nextSuggestions) => (suggestions = nextSuggestions)
   });
+
+  async function refreshSavedCount(): Promise<void> {
+    if (!auth.session) {
+      savedCount = undefined;
+      return;
+    }
+
+    const userId = auth.session.user.id;
+    try {
+      const count = await loadSavedWordCount();
+      if (auth.session?.user.id === userId) savedCount = count;
+    } catch {
+      savedCount = undefined;
+    }
+  }
 
   async function scrollAfterFound(): Promise<void> {
     await tick();
@@ -87,6 +107,7 @@
       if (!error) {
         currentSaved = true;
         message = 'Uloženo do slovníku.';
+        await refreshSavedCount();
       }
       return data;
     } catch (cause) {
@@ -119,6 +140,7 @@
         currentSaved = true;
         message = 'Uloženo do slovníku.';
       }
+      await refreshSavedCount();
     } catch {
       error = 'Změnu se nepodařilo uložit. Zkontrolujte připojení.';
     } finally {
@@ -159,6 +181,7 @@
       if (changed) {
         currentSaved = false;
         message = '';
+        void refreshSavedCount();
       }
       const initialWord = getLookupWord();
       if (initialWord && !initialLookupStarted) {
@@ -196,6 +219,7 @@
 <main class="mx-auto max-w-300 px-3 pt-6 pb-16 sm:px-4 sm:pb-14 lg:px-8">
   <StickyToolbar
     {view}
+    {savedCount}
     exportDisabled={exporting || busy || !result}
     onView={selectView}
     onExport={(format) => void runExport(format)}

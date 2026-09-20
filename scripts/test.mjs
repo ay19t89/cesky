@@ -60,7 +60,7 @@ const { lookup, parseIjp, validateWord } =
   await import('../.test-build/server/dictionary.mjs');
 const { findLatestSavedId, sortSavedWords } =
   await import('../.test-build/saved-word-order.mjs');
-const { examplesByPattern, patternGroups } =
+const { canonicalPatternLookups, examplesByPattern, patternGroups } =
   await import('../.test-build/pattern-examples.mjs');
 const { suggest } = await import('../.test-build/suggestions.mjs');
 const {
@@ -196,6 +196,8 @@ assert.deepEqual(
   ]).get('moře'),
   ['moře']
 );
+assert.equal(canonicalPatternLookups().length, 14);
+assert.equal(canonicalPatternLookups()[0].ijp.entries[0].lemma, 'pán');
 assert.equal(suggest('pocit', ['pocit'])[0], 'pocit');
 assert.equal(
   datedExportFilename('auto', new Date('2026-09-19T20:30:00Z')),

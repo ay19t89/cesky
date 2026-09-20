@@ -1,5 +1,15 @@
 <script lang="ts">
-  let { name }: { name: string } = $props();
+  let {
+    name,
+    iconSize
+  }: {
+    name: string;
+    iconSize?: number;
+  } = $props();
+
+  const sizeClass = $derived(
+    iconSize === 12 ? 'size-12' : iconSize === 8 ? 'size-8' : 'size-5'
+  );
 </script>
 
-<i class={`ri-${name} size-5`} aria-hidden="true"></i>
+<i class={`ri-${name} ${sizeClass}`} aria-hidden="true"></i>

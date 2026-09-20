@@ -9,15 +9,13 @@
     savedCount,
     exportDisabled,
     onView,
-    onExport,
-    showExport = true
+    onExport
   }: {
     view: View;
     savedCount?: number;
     exportDisabled: boolean;
     onView: (view: View) => void;
     onExport: (format: ExportFormat) => void;
-    showExport?: boolean;
   } = $props();
 
   const options: [ExportFormat, string][] = [
@@ -49,7 +47,7 @@
 
 <nav
   class={[
-    'sticky top-3 z-20 mx-auto mb-8 flex w-full flex-wrap',
+    'sticky top-3 z-20 min-h-14 mx-auto mb-8 flex w-full flex-wrap',
     'items-center justify-between gap-2 rounded-xl border border-[#cbd8e8]',
     'bg-neutral-50/80 p-2 ring-1 ring-white/80 backdrop-blur-lg',
     'shadow-[0_8px_28px_rgba(23,55,95,0.17),0_1px_5px_rgba(23,55,95,0.1)]',
@@ -67,6 +65,7 @@
       <Icon name={view === 'lookup' ? 'search-fill' : 'search-line'} />
       Slovo
     </button>
+
     <button
       class="tab {view === 'saved' ? '' : 'opacity-80'}"
       type="button"
@@ -76,26 +75,27 @@
       <Icon name={view === 'saved' ? 'bookmark-fill' : 'bookmark-line'} />
       Slovník
       {#if savedCount !== undefined}
-        <span class="ml-1 rounded-full bg-[#e6edf8] px-2 py-px text-[#183452]">
+        <span class="ml-1 rounded-full min-w-8 bg-neutral-200 px-2 py-0 text-[#183452]">
           {savedCount}
         </span>
       {/if}
     </button>
+
     <button
       class="tab {view === 'patterns' ? '' : 'opacity-80'}"
       type="button"
       aria-pressed={view === 'patterns'}
       onclick={() => onView('patterns')}
     >
-      <Icon name={view === 'patterns' ? 'apps-2-fill' : 'apps-2-line'} />
+      <Icon name={view === 'patterns' ? 'shapes-fill' : 'shapes-line'} />
       Vzory
     </button>
   </div>
-  {#if showExport}
-    <details bind:open={exportOpen} data-export-menu class="relative ml-auto">
+
+  <details bind:open={exportOpen} data-export-menu class="relative ml-auto">
     <summary
       class={[
-        'btn btn-secondary list-none px-3 py-2 text-xs text-[#4268bd]',
+        'btn btn-secondary list-none p-2 text-xs text-[#4268bd]',
         '[&::-webkit-details-marker]:hidden',
         exportDisabled ? 'cursor-not-allowed opacity-50' : ''
       ]}
@@ -105,12 +105,12 @@
       }}
     >
       <Icon name="download-2-line" />
-      Stáhnout
     </summary>
+
     <div
       class={[
-        'absolute top-full right-0 z-30 mt-2 min-w-36 overflow-hidden',
-        'rounded-lg border border-[#dbe3ee] bg-white p-1',
+        'absolute top-full right-0 z-30 mt-3 min-w-36 overflow-hidden',
+        'rounded-lg border border-slate-200 bg-white p-1',
         'shadow-[0_12px_32px_rgba(23,55,95,0.16)]'
       ]}
       aria-label="Formát stažení"
@@ -132,6 +132,6 @@
         </button>
       {/each}
     </div>
-    </details>
-  {/if}
+
+  </details>
 </nav>

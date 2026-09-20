@@ -19,6 +19,15 @@ export async function loadSavedWords(): Promise<Saved[]> {
   }
 }
 
+export async function loadSavedWordCount(): Promise<number> {
+  const response = await supabase
+    .from('czech_words')
+    .select('id', { count: 'exact', head: true });
+
+  if (response.error) throw response.error;
+  return response.count ?? 0;
+}
+
 export async function saveWord(userId: string, result: Lookup): Promise<void> {
   const response = await supabase.from('czech_words').upsert(
     {

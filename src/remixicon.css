@@ -75,3 +75,19 @@
 .ri-time-line::before {
   content: '\f20f';
 }
+
+.ri-shapes-fill::before {
+  content: '\f3d9';
+}
+
+.ri-shapes-line::before {
+  content: '\f3da';
+}
+
+.ri-arrow-down-s-line::before {
+  content: '\ea4e';
+}
+
+.ri-database-2-line::before {
+  content: '\ec16';
+}

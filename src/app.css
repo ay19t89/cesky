@@ -70,7 +70,7 @@
   }
 
   .btn-secondary {
-    @apply border-[#dbe3ee] bg-white text-[#334e72];
+    @apply border-slate-200 bg-white text-[#334e72];
   }
 
   .tab {

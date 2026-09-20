@@ -7,12 +7,14 @@
     type ExportFormat,
     type View
   } from '$lib/components/StickyToolbar.svelte';
+  import { exportData } from '$lib/exports';
   import {
     openLookupHome,
     openSavedDictionary,
     openSavedWord
   } from '$lib/lookup-history';
   import { createPageAuth } from '$lib/page-auth.svelte';
+  import { canonicalPatternLookups } from '$lib/pattern-examples';
   import { loadSavedWords } from '$lib/saved-words';
   import type { Saved } from '$lib/types';
   import { onMount } from 'svelte';
@@ -22,6 +24,7 @@
   let saved = $state.raw<Saved[]>([]);
   let busy = $state(false);
   let error = $state('');
+  let exporting = $state(false);
 
   async function loadExamples(): Promise<void> {
     if (!auth.session) {
@@ -45,6 +48,18 @@
   function selectView(nextView: View): void {
     if (nextView === 'lookup') void openLookupHome();
     if (nextView === 'saved') void openSavedDictionary();
+  }
+
+  async function runExport(format: ExportFormat): Promise<void> {
+    exporting = true;
+    error = '';
+    try {
+      await exportData(format, canonicalPatternLookups());
+    } catch (cause) {
+      error = cause instanceof Error ? cause.message : 'Export se nezdařil.';
+    } finally {
+      exporting = false;
+    }
   }
 
   onMount(() => {
@@ -73,10 +88,9 @@
   <StickyToolbar
     {view}
     savedCount={auth.session ? saved.length : undefined}
-    exportDisabled={true}
-    showExport={false}
+    exportDisabled={exporting}
     onView={selectView}
-    onExport={(_format: ExportFormat) => {}}
+    onExport={(format) => void runExport(format)}
   />
 
   <div class="eyebrow">ČESKÉ SKLOŇOVÁNÍ</div>

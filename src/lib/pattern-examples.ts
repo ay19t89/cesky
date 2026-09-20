@@ -1,5 +1,9 @@
-import { inferDeclensionPattern } from './declension-patterns';
-import type { Saved } from './types';
+import {
+  canonicalPatterns,
+  inferDeclensionPattern
+} from './declension-patterns';
+import { ijpUrlForWord } from './ijp-url';
+import type { Lookup, Saved } from './types';
 
 export type PatternSection = {
   title?: string;
@@ -55,4 +59,18 @@ export function examplesByPattern(saved: Saved[]): Map<string, string[]> {
       [...words].sort((left, right) => left.localeCompare(right, 'cs'))
     ])
   );
+}
+
+export function canonicalPatternLookups(): Lookup[] {
+  const checkedAt = new Date().toISOString();
+  return canonicalPatterns.map((pattern) => ({
+    requested: pattern.lemma,
+    word: pattern.lemma,
+    checkedAt,
+    ijp: {
+      status: 'ok',
+      url: ijpUrlForWord(pattern.lemma),
+      entries: [pattern]
+    }
+  }));
 }
