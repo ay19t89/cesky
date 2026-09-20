@@ -12,7 +12,7 @@
     onExport
   }: {
     view: View;
-    savedCount: number;
+    savedCount?: number;
     exportDisabled: boolean;
     onView: (view: View) => void;
     onExport: (format: ExportFormat) => void;
@@ -73,9 +73,11 @@
     >
       <Icon name={view === 'saved' ? 'bookmark-fill' : 'bookmark-line'} />
       Slovník
-      <span class="ml-1 rounded-full bg-[#e6edf8] px-2 py-px text-[#183452]">
-        {savedCount}
-      </span>
+      {#if savedCount !== undefined}
+        <span class="ml-1 rounded-full bg-[#e6edf8] px-2 py-px text-[#183452]">
+          {savedCount}
+        </span>
+      {/if}
     </button>
   </div>
   <details bind:open={exportOpen} data-export-menu class="relative ml-auto">

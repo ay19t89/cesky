@@ -8,7 +8,6 @@
     type ExportFormat,
     type View
   } from '$lib/components/StickyToolbar.svelte';
-  import { requestDictionary } from '$lib/dictionary-api';
   import { exportData } from '$lib/exports';
   import { openLookupHome, openSavedWord } from '$lib/lookup-history';
   import { createPageAuth } from '$lib/page-auth.svelte';
@@ -18,7 +17,7 @@
     type SavedWordOrder
   } from '$lib/saved-word-order';
   import { loadSavedWords } from '$lib/saved-words';
-  import { loadLearnedSuggestions, suggest } from '$lib/suggestions';
+  import { createSuggestionController } from '$lib/suggestion-controller';
   import type { Gender, Saved } from '$lib/types';
   import { onMount } from 'svelte';
 
@@ -32,9 +31,11 @@
   let exporting = $state(false);
   let gender = $state<'all' | Gender>('all');
   let order = $state<SavedWordOrder>('recent');
-  let learnedSuggestions = $state.raw<string[]>([]);
-  let suggestionTimer = $state<ReturnType<typeof setTimeout> | undefined>();
-  let suggestionRequest = $state<AbortController | undefined>();
+  const suggestionController = createSuggestionController({
+    getWord: () => word,
+    getVocabulary: () => saved.map((item) => item.word),
+    setSuggestions: (nextSuggestions) => (suggestions = nextSuggestions)
+  });
 
   const latestSavedId = $derived(findLatestSavedId(saved));
   const visibleSaved = $derived.by(() =>
@@ -47,33 +48,6 @@
       order
     )
   );
-
-  function updateSuggestions(): void {
-    const local = suggest(word, [
-      ...saved.map((item) => item.word),
-      ...learnedSuggestions
-    ]);
-    suggestions = local;
-    if (suggestionTimer) clearTimeout(suggestionTimer);
-    suggestionRequest?.abort();
-    if (word.trim().length < 3) return;
-
-    const value = word.trim();
-    suggestionTimer = setTimeout(() => {
-      const controller = new AbortController();
-      suggestionRequest = controller;
-      requestDictionary(value, 'suggest', controller.signal)
-        .then((data) => {
-          if (word.trim() !== value) return;
-          suggestions = [
-            ...new Set([...(data.suggestions || []), ...local])
-          ].slice(0, 8);
-        })
-        .catch(() => {
-          suggestions = local;
-        });
-    }, 4_000);
-  }
 
   async function loadDictionary(): Promise<void> {
     if (!auth.session) {
@@ -116,20 +90,17 @@
 
   function searchWord(searchWord: string): void {
     if (!searchWord.trim()) return;
-    if (suggestionTimer) clearTimeout(suggestionTimer);
-    suggestionRequest?.abort();
+    suggestionController.cancel();
     void openSavedWord(searchWord.trim());
   }
 
   onMount(() => {
-    learnedSuggestions = loadLearnedSuggestions();
     const cleanupAuth = auth.initialize((_session, changed) => {
       if (changed) void loadDictionary();
     });
     return () => {
       cleanupAuth();
-      if (suggestionTimer) clearTimeout(suggestionTimer);
-      suggestionRequest?.abort();
+      suggestionController.cancel();
     };
   });
 </script>
@@ -170,7 +141,7 @@
     bind:word
     {suggestions}
     {busy}
-    onInput={updateSuggestions}
+    onInput={suggestionController.update}
     onSubmit={searchWord}
   />
 

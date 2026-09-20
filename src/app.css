@@ -75,7 +75,7 @@
 
   .tab {
     @apply relative inline-flex cursor-pointer items-center justify-center gap-2;
-    @apply rounded-lg border border-transparent bg-[#4268bd] px-3 py-1;
+    @apply rounded-lg border border-transparent bg-[#4268bd] px-2 sm:px-3 py-1;
     @apply text-sm font-bold text-white;
   }
 

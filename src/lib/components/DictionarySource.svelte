@@ -47,7 +47,7 @@
     {/if}
     {#if result.ijp.suggestions?.length}
       <div class="flex flex-wrap items-center gap-1 text-xs">
-        <span class="text-[#61738a]">Možná hesla:</span>
+        <span class="text-[#61738a]">Možné vyhledávací výrazy:</span>
         {#each result.ijp.suggestions as suggestion (suggestion)}
           <button
             class="rounded-md border border-[#cbd8ea] px-2 py-1 font-semibold text-blue-700 hover:bg-[#edf3ff]"
@@ -59,7 +59,7 @@
         {/each}
       </div>
     {/if}
-    <small class="ml-auto text-xs text-[#61738a]">
+    <small class="hidden ml-auto text-xs text-[#61738a]">
       {sourceStatusLabel(result.ijp.status)}
     </small>
   </div>

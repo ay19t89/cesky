@@ -40,7 +40,7 @@
 </script>
 
 <section class="panel mt-6 overflow-hidden">
-  <div class="flex items-start justify-between gap-4 px-4 sm:px-6 pt-4">
+  <div class="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4">
     <div>
       <h2 class="text-2xl tracking-[-0.5px]">Můj slovník</h2>
       <p class="mt-2 mb-0 text-sm text-neutral-500">
@@ -50,7 +50,7 @@
 
     <div class="flex flex-wrap items-center justify-end gap-2">
       <div
-        class="flex max-sm:flex-col rounded-lg border border-neutral-200 bg-[#f4f7fc] p-1"
+        class="flex max-sm:flex-col rounded-lg border border-neutral-200 bg-[#f4f7fc] sm:p-1"
         aria-label="Řazení slov"
       >
         <button
@@ -84,7 +84,7 @@
     aria-label="Filtr rodu"
   >
     <button
-      class="btn btn-secondary min-h-10 sm:px-1 sm:text-xs
+      class="btn btn-secondary h-12 sm:px-1 sm:text-xs
         col-span-3 w-full max-w-60 justify-self-center text-md
         border-[#4268bd]! bg-[#4268bd]! text-white!"
       type="button"
@@ -92,7 +92,7 @@
     >
 
     <button
-      class="btn btn-secondary size-11 p-0 justify-self-end"
+      class="btn btn-secondary size-12 p-0 justify-self-end"
       type="button"
       aria-label="Obnovit slovník"
       disabled={busy || !email}

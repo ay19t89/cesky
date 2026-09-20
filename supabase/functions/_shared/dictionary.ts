@@ -220,9 +220,17 @@ async function lookupWithCaseFallback(requested: string): Promise<Source> {
   return combineMissingSources(attempted);
 }
 
+async function followSingleSuggestion(source: Source): Promise<Source> {
+  if (source.entries.length || source.suggestions?.length !== 1) return source;
+
+  const suggestedSource = await lookupWithCaseFallback(source.suggestions[0]);
+  return suggestedSource.entries.length ? suggestedSource : source;
+}
+
 export async function lookup(raw: unknown): Promise<Lookup> {
   const requested = validateWord(raw);
-  const ijp = await lookupWithCaseFallback(requested);
+  const initialSource = await lookupWithCaseFallback(requested);
+  const ijp = await followSingleSuggestion(initialSource);
   const word = ijp.entries[0]?.lemma || requested;
 
   return {

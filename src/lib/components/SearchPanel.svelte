@@ -69,13 +69,15 @@
       onSubmit(word);
     }}
   >
-    <span class="max-sm:hidden"><Icon name="search-line" /></span>
-    <div class="relative min-w-25 flex-1">
+    <span class="max-sm:hidden">
+      <Icon name="search-line" />
+    </span>
+    <div class="relative min-w-24 flex-1">
       <input
         class={[
           'w-full rounded-lg border border-slate-300 bg-white p-3',
           'text-xl text-blue-950 outline-offset-0',
-          'focus:border-blue-200 focus:outline-2 focus:outline-blue-200',
+          'focus:border-blue-200 focus:outline-2 focus:outline-blue-200'
         ]}
         id="word"
         bind:value={word}

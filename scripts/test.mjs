@@ -147,6 +147,19 @@ const idFallback = await lookup('moře');
 assert.equal(idFallback.word, 'moře');
 assert.ok(idFallback.ijp.url.includes('?id=mo%C5%99e'));
 assert.equal(requestedUrls.length, 2);
+
+requestedUrls.length = 0;
+globalThis.fetch = async (url) => {
+  requestedUrls.push(String(url));
+  if (String(url).includes('m%C4%9Bsto')) {
+    return new Response(ijpHtml.replaceAll('moře', 'město'));
+  }
+  return new Response('<div id="dalsiz"><a href="?id=město">město</a></div>');
+};
+const suggestedFallback = await lookup('mesto');
+assert.equal(suggestedFallback.requested, 'mesto');
+assert.equal(suggestedFallback.word, 'město');
+assert.ok(requestedUrls.some((url) => url.includes('slovo=m%C4%9Bsto')));
 globalThis.fetch = originalFetch;
 
 const savedRows = [

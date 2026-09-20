@@ -32,15 +32,14 @@
 </script>
 
 <section class="panel mt-6 overflow-hidden" aria-busy={busy}>
-  <div
-    class="flex justify-between gap-4 p-6 max-sm:flex-wrap max-sm:px-4 max-sm:pt-5"
-  >
-    <div>
+  <div class="relative flex justify-between gap-4 p-6 max-sm:p-4">
+
+    <div class="">
       <div class="eyebrow">VÝSLEDEK</div>
       <h2 class="my-3 text-4xl tracking-[-1px]">
         {result.word}
       </h2>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-3">
         {#each resultGenders as entryGender (entryGender ?? 'unknown')}
           <span
             class="rounded-md border border-[#d7e5ff] bg-[#edf3ff] px-2 py-1 text-[13px] text-[#4268bd]"
@@ -51,17 +50,18 @@
         <DeclensionPatternBadges entries={result.ijp.entries} />
       </div>
       {#if result.requested !== result.word}
-        <p class="max-w-162 text-sm text-[#52647c]">
+        <p class="mt-2 max-w-162 text-sm text-[#52647c]">
           Příručka opravila „{result.requested}“ na „{result.word}“.
         </p>
       {/if}
     </div>
-    <div class="flex flex-col relative items-end justify-center gap-2">
+
+    <div class="absolute top-4 right-6 flex flex-col items-end gap-2 max-sm:top-4 max-sm:right-4">
       <small class="text-xs text-neutral-500 tabular-nums">
-        {checkedAt(result.checkedAt)}</small
-      >
+        {checkedAt(result.checkedAt)}
+      </small>
       <button
-        class="btn"
+        class="btn max-sm:h-11"
         type="button"
         disabled={saving || busy || !signedIn || !result.ijp.entries.length}
         title={signedIn ? undefined : 'Pro ukládání slov se přihlaste.'}
