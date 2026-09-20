@@ -29,6 +29,7 @@ for (const name of [
   'translation',
   'suggestions',
   'saved-word-order',
+  'pattern-examples',
   'export/shared',
   'export/rows',
   'export/csv',
@@ -59,6 +60,8 @@ const { lookup, parseIjp, validateWord } =
   await import('../.test-build/server/dictionary.mjs');
 const { findLatestSavedId, sortSavedWords } =
   await import('../.test-build/saved-word-order.mjs');
+const { examplesByPattern, patternGroups } =
+  await import('../.test-build/pattern-examples.mjs');
 const { suggest } = await import('../.test-build/suggestions.mjs');
 const {
   canonicalPatterns,
@@ -176,6 +179,23 @@ assert.deepEqual(
   ['2', '3', '1']
 );
 assert.equal(findLatestSavedId(savedRows), '2');
+assert.equal(
+  patternGroups.flatMap((group) =>
+    group.sections.flatMap((section) => section.patterns)
+  ).length,
+  14
+);
+assert.deepEqual(
+  examplesByPattern([
+    {
+      id: 'moře',
+      word: fixture.word,
+      result: fixture,
+      updated_at: fixture.checkedAt
+    }
+  ]).get('moře'),
+  ['moře']
+);
 assert.equal(suggest('pocit', ['pocit'])[0], 'pocit');
 assert.equal(
   datedExportFilename('auto', new Date('2026-09-19T20:30:00Z')),

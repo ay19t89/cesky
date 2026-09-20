@@ -13,6 +13,7 @@
   import { exportData } from '$lib/exports';
   import {
     getLookupWord,
+    openPatterns,
     openSavedDictionary,
     pushLookupWord
   } from '$lib/lookup-history';
@@ -149,6 +150,7 @@
 
   function selectView(nextView: View): void {
     if (nextView === 'saved') void openSavedDictionary();
+    if (nextView === 'patterns') void openPatterns();
   }
 
   onMount(() => {

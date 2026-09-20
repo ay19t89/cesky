@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from '$lib/Icon.svelte';
 
-  export type View = 'lookup' | 'saved';
+  export type View = 'lookup' | 'saved' | 'patterns';
   export type ExportFormat = 'csv' | 'xlsx' | 'pdf-a4' | 'pdf-a3';
 
   let {
@@ -9,13 +9,15 @@
     savedCount,
     exportDisabled,
     onView,
-    onExport
+    onExport,
+    showExport = true
   }: {
     view: View;
     savedCount?: number;
     exportDisabled: boolean;
     onView: (view: View) => void;
     onExport: (format: ExportFormat) => void;
+    showExport?: boolean;
   } = $props();
 
   const options: [ExportFormat, string][] = [
@@ -79,8 +81,18 @@
         </span>
       {/if}
     </button>
+    <button
+      class="tab {view === 'patterns' ? '' : 'opacity-80'}"
+      type="button"
+      aria-pressed={view === 'patterns'}
+      onclick={() => onView('patterns')}
+    >
+      <Icon name={view === 'patterns' ? 'apps-2-fill' : 'apps-2-line'} />
+      Vzory
+    </button>
   </div>
-  <details bind:open={exportOpen} data-export-menu class="relative ml-auto">
+  {#if showExport}
+    <details bind:open={exportOpen} data-export-menu class="relative ml-auto">
     <summary
       class={[
         'btn btn-secondary list-none px-3 py-2 text-xs text-[#4268bd]',
@@ -120,5 +132,6 @@
         </button>
       {/each}
     </div>
-  </details>
+    </details>
+  {/if}
 </nav>

@@ -26,6 +26,10 @@ export function openSavedDictionary(): Promise<void> {
   return goto(`${base}/slovnik`);
 }
 
+export function openPatterns(): Promise<void> {
+  return goto(`${base}/vzory`);
+}
+
 export function openLookupHome(): Promise<void> {
   return goto(`${base}/`);
 }

@@ -9,7 +9,11 @@
     type View
   } from '$lib/components/StickyToolbar.svelte';
   import { exportData } from '$lib/exports';
-  import { openLookupHome, openSavedWord } from '$lib/lookup-history';
+  import {
+    openLookupHome,
+    openPatterns,
+    openSavedWord
+  } from '$lib/lookup-history';
   import { createPageAuth } from '$lib/page-auth.svelte';
   import {
     findLatestSavedId,
@@ -86,6 +90,7 @@
 
   function selectView(nextView: View): void {
     if (nextView === 'lookup') void openLookupHome();
+    if (nextView === 'patterns') void openPatterns();
   }
 
   function searchWord(searchWord: string): void {
