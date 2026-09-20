@@ -75,7 +75,7 @@
       <Icon name={view === 'saved' ? 'bookmark-fill' : 'bookmark-line'} />
       Slovník
       {#if savedCount !== undefined}
-        <span class="ml-1 rounded-full min-w-8 bg-neutral-200 px-2 py-0 text-[#183452]">
+        <span class="sm:ml-1 rounded-full min-w-8 bg-neutral-200 px-1 py-0 text-[#183452]">
           {savedCount}
         </span>
       {/if}
