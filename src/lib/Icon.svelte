@@ -1,15 +1,13 @@
 <script lang="ts">
   let {
     name,
-    iconSize
+    bigIcon = false,
   }: {
     name: string;
-    iconSize?: number;
+    bigIcon?: boolean;
   } = $props();
 
-  const sizeClass = $derived(
-    iconSize === 12 ? 'size-12' : iconSize === 8 ? 'size-8' : 'size-5'
-  );
+  const sizeClass = $derived(bigIcon ? 'size-12' : 'size-5');
 </script>
 
 <i class={`ri-${name} ${sizeClass}`} aria-hidden="true"></i>

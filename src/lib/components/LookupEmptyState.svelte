@@ -9,7 +9,7 @@
     '[&>i]:mx-auto [&>i]:text-[#4268bd]'
   ]}
 >
-  <Icon name="book-open-line" iconSize={12} />
+  <Icon name="book-open-line" bigIcon={true} />
   <h2 class="mt-4 text-2xl tracking-[-0.5px]">Každý pád na svém místě.</h2>
   <p class="text-[#52647c]">
     Všech 7 pádů v jednotném i množném čísle, vedle sebe.
