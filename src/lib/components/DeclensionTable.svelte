@@ -10,7 +10,7 @@
 <div class="overflow-x-auto">
   <table
     class={[
-      'data-table min-w-160 table-fixed text-md sm:text-lg',
+      'data-table min-w-160 table-fixed text-base md:text-lg',
       '[&_td:nth-child(2)]:border-l',
       '[&_td:nth-child(2)]:border-neutral-200'
     ]}
@@ -33,16 +33,16 @@
       {#each caseNames as caseName, index (caseName)}
         <tr>
           <td>
-            <div class="flex min-w-36 items-center gap-3 sm:gap-4">
+            <div class="flex min-w-36 items-center gap-2 sm:gap-4">
               <b
-                class="grid size-7 shrink-0 place-items-center rounded-lg border border-blue-200
+                class="grid size-8 shrink-0 place-items-center rounded-lg border border-blue-200
                   bg-neutral-50 text-sm font-medium text-blue-800/90"
               >
                 {index + 1}
               </b>
               <div>
                 <strong class="text-sm">{caseName}</strong>
-                <small class="mt-1 block text-xs text-neutral-500">
+                <small class="block text-xs text-neutral-500">
                   {questions[index]}
                 </small>
               </div>
@@ -56,7 +56,7 @@
               rowspan={caseNames.length}
             >
               <div class="flex flex-col items-center gap-4 text-sm">
-                {#each TRANSLATION_LANGUAGES as language}
+                {#each TRANSLATION_LANGUAGES as language (language)}
                   <a
                     class="inline-flex items-center gap-1 font-bold text-blue-800/90 hover:text-blue-600 no-underline"
                     href={translationUrl(language, result.word)}

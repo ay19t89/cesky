@@ -47,6 +47,6 @@ export default defineConfig({
     ...(process.env.GITHUB_PAGES === 'true' ? [] : [sites()])
   ],
   server: {
-    allowedHosts: ['.zrok.io']
+    allowedHosts: ['.share.zrok.io']
   }
 });

@@ -8,8 +8,8 @@
   }
 </script>
 
-<div class="overflow-x-auto">
-  <table class="data-table min-w-120 table-fixed text-sm">
+<div class="max-w-full overflow-x-auto">
+  <table class="data-table w-full table-fixed text-sm">
     <colgroup>
       <col class="w-2/5" />
       <col class="w-3/10" />
@@ -26,8 +26,13 @@
       {#each caseNames as caseName, index (caseName)}
         <tr>
           <td>
-            <strong>{index + 1}. {caseName}</strong>
-            <small class="mt-1 block text-xs text-neutral-500">
+            <strong>
+              <span class="font-serif font-semibold text-xs">
+                {index + 1}.
+              </span>
+              {caseName}</strong
+            >
+            <small class="sm:mt-1 block text-xs text-neutral-500">
               {questions[index]}
             </small>
           </td>

@@ -12,7 +12,7 @@
     onExport
   }: {
     view: View;
-    savedCount?: number;
+    savedCount: number;
     exportDisabled: boolean;
     onView: (view: View) => void;
     onExport: (format: ExportFormat) => void;
@@ -74,11 +74,11 @@
     >
       <Icon name={view === 'saved' ? 'bookmark-fill' : 'bookmark-line'} />
       Slovník
-      {#if savedCount !== undefined}
-        <span class="sm:ml-1 rounded-full min-w-8 bg-neutral-200 px-1 py-0 text-[#183452]">
-          {savedCount}
-        </span>
-      {/if}
+      <span
+        class="min-w-8 rounded-full bg-neutral-200 px-1 py-0 text-[#183452] sm:ml-1"
+      >
+        {savedCount}
+      </span>
     </button>
 
     <button

@@ -39,7 +39,7 @@
   let saving = $state(false);
   let currentSaved = $state(false);
   let exporting = $state(false);
-  let savedCount = $state<number | undefined>(undefined);
+  let savedCount = $state(0);
   let requestId = $state(0);
   const suggestionController = createSuggestionController({
     getWord: () => word,
@@ -48,7 +48,7 @@
 
   async function refreshSavedCount(): Promise<void> {
     if (!auth.session) {
-      savedCount = undefined;
+      savedCount = 0;
       return;
     }
 
@@ -57,7 +57,7 @@
       const count = await loadSavedWordCount();
       if (auth.session?.user.id === userId) savedCount = count;
     } catch {
-      savedCount = undefined;
+      savedCount = 0;
     }
   }
 

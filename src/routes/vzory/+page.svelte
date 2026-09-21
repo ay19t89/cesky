@@ -87,7 +87,7 @@
 <main class="mx-auto max-w-300 px-3 pt-6 pb-16 sm:px-4 sm:pb-14 lg:px-8">
   <StickyToolbar
     {view}
-    savedCount={auth.session ? saved.length : undefined}
+    savedCount={saved.length}
     exportDisabled={exporting}
     onView={selectView}
     onExport={(format) => void runExport(format)}

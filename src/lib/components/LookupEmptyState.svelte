@@ -6,10 +6,10 @@
   class={[
     'mt-7 rounded-xl border border-dashed border-[#cbd6e6]',
     'bg-[#f9fbff] px-6 py-13 text-center',
-    '[&>i]:mx-auto [&>i]:text-[#4268bd]'
+    '[&>i]:mx-auto [&>i]:size-12 [&>i]:text-[#4268bd]'
   ]}
 >
-  <Icon name="book-open-line" bigIcon={true} />
+  <Icon name="book-open-line" />
   <h2 class="mt-4 text-2xl tracking-[-0.5px]">Každý pád na svém místě.</h2>
   <p class="text-[#52647c]">
     Všech 7 pádů v jednotném i množném čísle, vedle sebe.
