@@ -8,16 +8,16 @@ Russian translations, and exports Unicode CSV, XLSX, A4 PDF, and A3 PDF files.
 ## Development
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ## Verification and build
 
 ```bash
-npm run check
-npm test
-npm run build
+pnpm check
+pnpm test
+pnpm build
 ```
 
 The SvelteKit output and Sites worker bundle are written to `build/` and
