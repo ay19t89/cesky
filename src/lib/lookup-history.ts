@@ -23,13 +23,13 @@ export function openSavedWord(word: string): Promise<void> {
 }
 
 export function openSavedDictionary(): Promise<void> {
-  return goto(`${base}/slovnik`);
+  return goto(`${base}/slovnik`, { noScroll: true });
 }
 
 export function openPatterns(): Promise<void> {
-  return goto(`${base}/vzory`);
+  return goto(`${base}/vzory`, { noScroll: true });
 }
 
 export function openLookupHome(): Promise<void> {
-  return goto(`${base}/`);
+  return goto(`${base}/`, { noScroll: true });
 }

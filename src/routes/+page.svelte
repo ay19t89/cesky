@@ -1,35 +1,25 @@
 <script lang="ts">
-  import AppHeader from '$lib/components/AppHeader.svelte';
-  import LoginDialog from '$lib/components/LoginDialog.svelte';
+  import {
+    getAppShell,
+    type ExportFormat,
+    type ToolbarRegistration
+  } from '$lib/app-shell.svelte';
   import LookupEmptyState from '$lib/components/LookupEmptyState.svelte';
   import LookupResult from '$lib/components/LookupResult.svelte';
   import SearchPanel from '$lib/components/SearchPanel.svelte';
   import SiteFooter from '$lib/components/SiteFooter.svelte';
-  import StickyToolbar, {
-    type ExportFormat,
-    type View
-  } from '$lib/components/StickyToolbar.svelte';
   import { requestDictionary } from '$lib/dictionary-api';
   import { exportData } from '$lib/exports';
-  import {
-    getLookupWord,
-    openPatterns,
-    openSavedDictionary,
-    pushLookupWord
-  } from '$lib/lookup-history';
+  import { getLookupWord, pushLookupWord } from '$lib/lookup-history';
   import { createPageAuth } from '$lib/page-auth.svelte';
-  import {
-    loadSavedWordCount,
-    removeWord,
-    saveWord
-  } from '$lib/saved-words';
+  import { loadSavedWordCount, removeWord, saveWord } from '$lib/saved-words';
   import { createSuggestionController } from '$lib/suggestion-controller';
   import type { Lookup } from '$lib/types';
   import { registerLookup } from '$lib/webmcp';
   import { onMount, tick } from 'svelte';
 
   const auth = createPageAuth();
-  const view: View = 'lookup';
+  const shell = getAppShell();
   let word = $state('');
   let suggestions = $state.raw<string[]>([]);
   let result = $state.raw<Lookup | null>(null);
@@ -41,6 +31,15 @@
   let exporting = $state(false);
   let savedCount = $state(0);
   let requestId = $state(0);
+  const toolbar: ToolbarRegistration = {
+    get savedCount() {
+      return savedCount;
+    },
+    get exportDisabled() {
+      return exporting || busy || !result;
+    },
+    onExport: (format) => void runExport(format)
+  };
   const suggestionController = createSuggestionController({
     getWord: () => word,
     setSuggestions: (nextSuggestions) => (suggestions = nextSuggestions)
@@ -124,7 +123,7 @@
   async function toggleCurrentWordSaved(): Promise<void> {
     if (!result) return;
     if (!auth.session) {
-      auth.loginOpen = true;
+      shell.openLogin();
       return;
     }
     saving = true;
@@ -170,12 +169,8 @@
     }
   }
 
-  function selectView(nextView: View): void {
-    if (nextView === 'saved') void openSavedDictionary();
-    if (nextView === 'patterns') void openPatterns();
-  }
-
   onMount(() => {
+    const unregisterToolbar = shell.registerToolbar(toolbar);
     let initialLookupStarted = false;
     const cleanupAuth = auth.initialize((_session, changed) => {
       if (changed) {
@@ -192,6 +187,7 @@
     const cleanupWebMcp = registerLookup(lookupWord);
 
     return () => {
+      unregisterToolbar();
       cleanupAuth();
       cleanupWebMcp();
       suggestionController.cancel();
@@ -205,68 +201,36 @@
   <title>České pády</title>
 </svelte:head>
 
-<AppHeader
-  signedIn={Boolean(auth.session)}
-  authReady={auth.ready}
-  onLogin={() => (auth.loginOpen = true)}
-  onLogout={async () => {
-    if (!(await auth.signOut())) {
-      error = 'Odhlášení se nezdařilo. Zkuste to znovu.';
-    }
-  }}
+<div class="eyebrow">SLOVO PO SLOVU</div>
+<h1 class="mt-2 text-3xl leading-[1.2] tracking-[-1.5px] sm:text-4xl">
+  Čeština ve všech pádech.
+</h1>
+<p class="mt-1 mb-6 text-neutral-500">
+  Vyhledejte podstatné jméno a uložte si jeho tvary.
+</p>
+
+<SearchPanel
+  bind:word
+  {suggestions}
+  {busy}
+  onInput={suggestionController.update}
+  onSubmit={(searchWord) => void lookupWord(searchWord).catch(() => {})}
 />
 
-<main class="mx-auto max-w-300 px-3 pt-6 pb-16 sm:px-4 sm:pb-14 lg:px-8">
-  <StickyToolbar
-    {view}
-    {savedCount}
-    exportDisabled={exporting || busy || !result}
-    onView={selectView}
-    onExport={(format) => void runExport(format)}
-  />
+{#if error}<p class="notice notice-error" role="alert">{error}</p>{/if}
 
-  <div class="eyebrow">SLOVO PO SLOVU</div>
-  <h1 class="mt-2 text-3xl leading-[1.2] tracking-[-1.5px] sm:text-4xl">
-    Čeština ve všech pádech.
-  </h1>
-  <p class="mt-1 mb-6 text-neutral-500">
-    Vyhledejte podstatné jméno a uložte si jeho tvary.
-  </p>
-
-  <SearchPanel
-    bind:word
-    {suggestions}
+{#if result}
+  <LookupResult
+    {result}
     {busy}
-    onInput={suggestionController.update}
-    onSubmit={(searchWord) => void lookupWord(searchWord).catch(() => {})}
+    {saving}
+    signedIn={Boolean(auth.session)}
+    {currentSaved}
+    {message}
+    onToggleSaved={() => void toggleCurrentWordSaved()}
+    onSuggestion={(suggestion) => void lookupWord(suggestion).catch(() => {})}
   />
-
-  {#if error}<p class="notice notice-error" role="alert">{error}</p>{/if}
-
-  {#if result}
-    <LookupResult
-      {result}
-      {busy}
-      {saving}
-      signedIn={Boolean(auth.session)}
-      {currentSaved}
-      {message}
-      onToggleSaved={() => void toggleCurrentWordSaved()}
-      onSuggestion={(suggestion) => void lookupWord(suggestion).catch(() => {})}
-    />
-  {:else}
-    <LookupEmptyState />
-  {/if}
-  <SiteFooter />
-</main>
-
-{#if auth.loginOpen}
-  <LoginDialog
-    bind:email={auth.email}
-    bind:password={auth.password}
-    busy={auth.busy}
-    error={auth.error}
-    onClose={() => (auth.loginOpen = false)}
-    onSubmit={auth.signIn}
-  />
+{:else}
+  <LookupEmptyState />
 {/if}
+<SiteFooter />

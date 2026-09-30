@@ -70,12 +70,6 @@
         <Icon name={currentSaved ? 'bookmark-fill' : 'bookmark-line'} />
         {saving ? 'Ukládám…' : currentSaved ? 'Uloženo' : 'Uložit slovo'}
       </button>
-      {#if message}
-        <small class="inline-flex items-center gap-1 text-xs text-[#287158]">
-          <Icon name="check-line" />
-          {message}
-        </small>
-      {/if}
     </div>
   </div>
 

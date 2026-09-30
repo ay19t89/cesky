@@ -8,7 +8,7 @@
   }
 </script>
 
-<div class="max-w-full overflow-x-auto">
+<div class="max-w-full min-w-100 overflow-x-auto">
   <table class="data-table w-full table-fixed text-sm">
     <colgroup>
       <col class="w-2/5" />

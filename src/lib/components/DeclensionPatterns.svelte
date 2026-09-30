@@ -121,7 +121,7 @@
                       </span>
                     </summary>
 
-                    <div class="border-t border-[#e5ebf3]">
+                    <div class="border-t border-[#e5ebf3] overflow-x-auto">
                       {#if canonical}
                         <CanonicalPatternTable pattern={canonical} />
                       {/if}

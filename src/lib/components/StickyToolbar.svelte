@@ -1,8 +1,6 @@
 <script lang="ts">
   import Icon from '$lib/Icon.svelte';
-
-  export type View = 'lookup' | 'saved' | 'patterns';
-  export type ExportFormat = 'csv' | 'xlsx' | 'pdf-a4' | 'pdf-a3';
+  import type { ExportFormat, View } from '$lib/app-shell.svelte';
 
   let {
     view,
@@ -132,6 +130,5 @@
         </button>
       {/each}
     </div>
-
   </details>
 </nav>
